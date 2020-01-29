@@ -1,0 +1,348 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddFavorite" xml:space="preserve">
+    <value>Add to favorites</value>
+    <comment>Add to favorites button text which is displayed on success card</comment>
+  </data>
+  <data name="AddFavTaskModuleSubtitle" xml:space="preserve">
+    <value>Add favorite rooms</value>
+    <comment>Subtitle for task module for managing favorite rooms</comment>
+  </data>
+  <data name="AnotherRoomTaskModuleSubtitle" xml:space="preserve">
+    <value>Search all rooms</value>
+    <comment>Subtitle for task module for searching and booking of other rooms</comment>
+  </data>
+  <data name="Available" xml:space="preserve">
+    <value>Available</value>
+    <comment>Available label text</comment>
+  </data>
+  <data name="BookRoom" xml:space="preserve">
+    <value>Book room</value>
+    <comment>Book room button text</comment>
+  </data>
+  <data name="BuildingName" xml:space="preserve">
+    <value>Building name</value>
+    <comment>Building name label text</comment>
+  </data>
+  <data name="CancelMeeting" xml:space="preserve">
+    <value>Cancel meeting</value>
+    <comment>Cancel meeting button text used to display on success card</comment>
+  </data>
+  <data name="CantLogIn" xml:space="preserve">
+    <value>We couldn't log you in. Please try again later.</value>
+    <comment>Login failure error message</comment>
+  </data>
+  <data name="CommandNotRecognized" xml:space="preserve">
+    <value>Cannot recognize **{command}** as valid command. Please type 'Help' to see all available commands.</value>
+    <comment>Message which will be displayed if user types command unknown to bot</comment>
+  </data>
+  <data name="ExceptionResponse" xml:space="preserve">
+    <value>Something went wrong and I can’t do that right now. Try again in a few minutes.</value>
+    <comment>Generic error message</comment>
+  </data>
+  <data name="Expired" xml:space="preserve">
+    <value>Room availability is outdated. Please refresh card and try again.</value>
+    <comment>Message to be displayed if user tries to book room from old card</comment>
+  </data>
+  <data name="FavoriteRoomExist" xml:space="preserve">
+    <value>That room is already one of your favorites.</value>
+    <comment>Message to be displayed if user tries to add existing favorite room as favorite</comment>
+  </data>
+  <data name="FavoriteRoomsModified" xml:space="preserve">
+    <value>Modified favorite rooms list. Please refresh.</value>
+    <comment>Message to be displayed if favorite list card can not update</comment>
+  </data>
+  <data name="LoggedInSuccess" xml:space="preserve">
+    <value>You are logged in successfully!</value>
+    <comment>Login success message</comment>
+  </data>
+  <data name="LogoutSuccess" xml:space="preserve">
+    <value>You have been signed out.</value>
+    <comment>Logout message</comment>
+  </data>
+  <data name="ManageFavorites" xml:space="preserve">
+    <value>Manage favorites</value>
+    <comment>Manage favorites button text</comment>
+  </data>
+  <data name="MeetingBody" xml:space="preserve">
+    <value>Meeting created by Book-a-room bot.</value>
+    <comment>Meeting body which will be sent in create event request to graph api</comment>
+  </data>
+  <data name="MeetingCancelled" xml:space="preserve">
+    <value>Meeting cancelled</value>
+    <comment>Text which will be shown to user after cancellation of meeting</comment>
+  </data>
+  <data name="MeetingSubject" xml:space="preserve">
+    <value>Room booked by Book-a-room bot.</value>
+    <comment>Meeting subject</comment>
+  </data>
+  <data name="MeetingTimeElapsed" xml:space="preserve">
+    <value>The meeting end time has elapsed.</value>
+    <comment>Message to be displayed while trying to cancel lapsed meeting</comment>
+  </data>
+  <data name="NoFavoriteRooms" xml:space="preserve">
+    <value>No favorite rooms yet. Add some for faster booking. Or, select more rooms to choose from the directory.</value>
+    <comment>Label displayed on favorite rooms list card if there are no rooms in favorite list</comment>
+  </data>
+  <data name="OtherRooms" xml:space="preserve">
+    <value>More rooms</value>
+    <comment>More rooms button text</comment>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh list</value>
+    <comment>Refresh button text</comment>
+  </data>
+  <data name="Room" xml:space="preserve">
+    <value>Room</value>
+    <comment>Room label</comment>
+  </data>
+  <data name="RoomAddedAsFavorite" xml:space="preserve">
+    <value>Added room to favorites.</value>
+    <comment>Message to show once user adds room to favorites</comment>
+  </data>
+  <data name="RoomAvailability" xml:space="preserve">
+    <value>Available rooms</value>
+    <comment>Favorite rooms list card title</comment>
+  </data>
+  <data name="RoomUnavailable" xml:space="preserve">
+    <value>That room isn’t available. Select a different one.</value>
+    <comment>Message to show if user tries to book unavailable room</comment>
+  </data>
+  <data name="SearchRoom" xml:space="preserve">
+    <value>Search</value>
+    <comment>Search room or building</comment>
+  </data>
+  <data name="Share" xml:space="preserve">
+    <value>Share</value>
+    <comment>Share button text</comment>
+  </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>Sign in</value>
+    <comment>Sign in button text</comment>
+  </data>
+  <data name="SignInRequired" xml:space="preserve">
+    <value>Sign in required</value>
+    <comment>Sign in card title</comment>
+  </data>
+  <data name="UnableToAddFavorite" xml:space="preserve">
+    <value>I couldn't add the room to your favorites. Try again later.</value>
+    <comment>Message to show after failure while adding room to favorites</comment>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>Unavailable</value>
+    <comment>Unavailable label</comment>
+  </data>
+  <data name="WelcomeCardContent" xml:space="preserve">
+    <value>I help you to quickly book a room for your meeting on the go</value>
+    <comment>Welcome card main content</comment>
+  </data>
+  <data name="WelcomeCardTitle" xml:space="preserve">
+    <value>Welcome</value>
+    <comment>Welcome label</comment>
+  </data>
+  <data name="InvalidTenant" xml:space="preserve">
+    <value>You're not authorized to access this bot. Please contact your administrator for help.</value>
+    <comment>Message to be showed if tenant id doesn't match with authorized tenant</comment>
+  </data>
+  <data name="RoomBooked" xml:space="preserve">
+    <value>{0} has been booked successfully.</value>
+    <comment>Message to show after successful booking of room</comment>
+  </data>
+  <data name="ManageFavoriteCardDescription" xml:space="preserve">
+    <value>Click on the button below to add or remove rooms from your favorites list.</value>
+    <comment>Manage favorites card description</comment>
+  </data>
+  <data name="DateFormat" xml:space="preserve">
+    <value>{0} at {1} ({2} mins)</value>
+    <comment>Date format to be displayed on success and cancel meeting card where {0} is for date {1} is for time and {2} is for total minute.</comment>
+  </data>
+  <data name="MeetingBooked" xml:space="preserve">
+    <value>Room booked!</value>
+    <comment>Success card header</comment>
+  </data>
+  <data name="WelcomeCardContentPart1" xml:space="preserve">
+    <value>**Book room** : Book your favorite room for a default duration of 30 mins</value>
+    <comment>Welcome card book room command description</comment>
+  </data>
+  <data name="WelcomeCardContentPart2" xml:space="preserve">
+    <value>**Manage favorites** : Add rooms as favorites to help you to quick book them later</value>
+    <comment>Welcome card manage favorites command description</comment>
+  </data>
+  <data name="CancellationComment" xml:space="preserve">
+    <value>Meeting is cancelled by organizer using Book-a-room bot.</value>
+    <comment>Comment to be sent to graph api while cancelling meeting.</comment>
+  </data>
+  <data name="AddButton" xml:space="preserve">
+    <value>Add</value>
+    <comment>Add button in manage favorites page</comment>
+  </data>
+  <data name="CantAddMoreRooms" xml:space="preserve">
+    <value>You cannot add more than 15 rooms to your favorites.</value>
+    <comment>Error message to show if user tries to add more than 15 rooms to favorites in client app</comment>
+  </data>
+  <data name="DoneButton" xml:space="preserve">
+    <value>Done</value>
+    <comment>Done button in client app</comment>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Location</value>
+    <comment>Location label used in manage favorites</comment>
+  </data>
+  <data name="SelectRoomToAdd" xml:space="preserve">
+    <value>Select room to add to your favorites.</value>
+    <comment>Error message to show if user tries to add room to favorite with empty selection in client app</comment>
+  </data>
+  <data name="LoadingMessage" xml:space="preserve">
+    <value>Loading...</value>
+    <comment>Loading message to be displayed while time zones loads in dropdown</comment>
+  </data>
+  <data name="MeetingLength" xml:space="preserve">
+    <value>Meeting length</value>
+    <comment>Meeting length label for other rooms task module</comment>
+  </data>
+  <data name="NoFavoriteRoomsTaskModule" xml:space="preserve">
+    <value>No favorite rooms yet.</value>
+    <comment>Message to show when user has no favorite rooms to display</comment>
+  </data>
+  <data name="SearchRoomDropdownPlaceholder" xml:space="preserve">
+    <value>Type a name or location</value>
+    <comment>Placeholder for search room dropdown for task module</comment>
+  </data>
+  <data name="SelectDurationRoom" xml:space="preserve">
+    <value>Select meeting length and room.</value>
+    <comment>Error to show when user tries to book room without selection</comment>
+  </data>
+  <data name="SelectTimezone" xml:space="preserve">
+    <value>Select time zone</value>
+    <comment>Placeholder for time zone selection dropdown</comment>
+  </data>
+  <data name="Timezone" xml:space="preserve">
+    <value>Time zone</value>
+    <comment>Time zone label</comment>
+  </data>
+  <data name="TimezoneNotSupported" xml:space="preserve">
+    <value>The detected time zone is not supported. Please select a time zone to proceed.</value>
+    <comment>Error message to be displayed when user local time zone doesn't match with supported time zones in task module</comment>
+  </data>
+  <data name="NoFavoritesDescriptionTaskModule" xml:space="preserve">
+    <value>Add a room to your list of favorites to get started.</value>
+    <comment>Message to display if there are no favorite rooms found for user in task module</comment>
+  </data>
+</root>

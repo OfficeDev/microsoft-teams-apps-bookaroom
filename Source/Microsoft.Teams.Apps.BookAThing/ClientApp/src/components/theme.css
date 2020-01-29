@@ -1,0 +1,154 @@
+/*
+    <copyright file="theme.css" company="Microsoft Corporation">
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    </copyright>
+*/
+
+.containerdiv {
+    height: 100vh;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    width: auto;
+}
+
+.containerdiv-unauthorized {
+    margin-top: 40vh;
+}
+
+/*Dark theme*/
+.theme-dark {
+    background-color: #2d2c2c;
+    color: white;
+}
+
+/*High-Contrast theme*/
+.theme-contrast {
+    background-color: black;
+    color: white;
+}
+
+/*Light-Theme*/
+
+.theme-light {
+    background-color: white;
+    color: black;
+}
+
+.teams-purple {
+    background-color: #464775;
+    color: white;
+}
+
+.theme-contrast .teams-purple {
+    background-color: black;
+    color: white;
+    border: 1px white solid;
+}
+
+
+.dropdown {
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: 2px solid #464775;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 100vw;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-bottom: 1.5rem;
+}
+
+.container-subdiv {
+    height: 50vh;
+    top: 0;
+    width: auto;
+    overflow-y: auto;
+}
+
+.rooms-dropdown {
+    width: 100%;
+}
+
+.rooms-dropdown-b {
+    float: right;
+}
+
+.rooms-dropdown-label {
+    font-weight: lighter;
+}
+
+.errormessage {
+    font-size: medium;
+    color: red;
+}
+
+.otherroom-container {
+    height: 100vh;
+}
+
+.otherroom-container-subdiv {
+    height: 85vh;
+    top: 0;
+    width: auto;
+}
+
+.otherroom-unauthorized {
+    margin-top: 40vh;
+}
+
+.addfav-dropdownlabel {
+    width: 100%;
+}
+
+.addfav-dropdownlabel-b {
+    float: left;
+}
+
+.addfav-dropdownlabel-b2 {
+    float: right;
+}
+
+.addfav-dropdownsublabel {
+    font-weight: lighter;
+}
+
+.addfav-errormessage {
+    font-size: medium;
+    color: red;
+}
+
+.showerrorlabel {
+    color: red;
+}
+
+.rooms-dropdown-b1 {
+    float: left;
+}
+
+.ListHeader {
+    font-size: 14px;
+    color: #252424;
+    letter-spacing: 0;
+    line-height: 20px;
+}
+
+.ListSubHeader {
+    font-size: 12px;
+    color: #252424;
+    letter-spacing: 0;
+    line-height: 16px;
+}
+
+.star {
+    height: 17px;
+    width: 18px;
+}
+
+.horizontalCenter {
+    margin-left: 45vw;
+}
