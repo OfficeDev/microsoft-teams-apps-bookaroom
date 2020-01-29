@@ -1,4 +1,4 @@
-﻿---
+---
 page_type: sample
 languages:
 - csharp
@@ -9,11 +9,8 @@ urlFragment: microsoft-teams-apps-bookaroom
 ---
 # Book-a-room bot
 
-[Home](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki)
-
-[Deployment guide](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Deployment-guide)
-
-[Solution overview](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Solution-Overview)
+| [Documentation](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki) | [Deployment guide](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Deployment-guide) | [Architecture](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Solution-Overview)
+|--|--|--|
 
 Book-a-room bot will let you easily book a room on the go with minimum clicks as possible in a personal scope. The users can look at available rooms depending on the selected location/building and time and select one from the list to book the room for a default duration of 30 minutes.
 
@@ -25,9 +22,9 @@ Book-a-room bot is designed to work in personal scope.
 
 A end-user interacting with Book-a-room bot:
 
-[[https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-2.png|Manage your favorite rooms]]
-[[https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-1.png|User favorite rooms]]
-[[https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-3.png|Room booking confirmation]]
+![Manage your favorite rooms](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-2.png)
+![User favorite rooms](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-1.png)
+![Room booking confirmation](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-3.png)
 
 
 ## **Legal Notices**
