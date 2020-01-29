@@ -1,0 +1,64 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.5",
+  "version": "1.0.0",
+  "id": "60c018e5-ac11-4e5d-9137-cb1fe6bbef9e",
+  "packageName": "com.microsoft.teams.bookaroom",
+  "developer": {
+    "name": "<company name>",
+    "websiteUrl": "<website url>",
+    "privacyUrl": "<privacy url>",
+    "termsOfUseUrl": "<terms of use url>"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Book-a-room"
+  },
+  "description": {
+    "short": "Book-a-room bot lets you quickly find and book a meeting room on the go.",
+    "full": "Book-a-room bot will let you easily book a room on the go in a personal scope. The users can look at available rooms depending on the selected location/building and time and select one from the list to book the room."
+  },
+  "accentColor": "#F88834",
+  "bots": [
+    {
+      "botId": "<bot id>",
+      "scopes": [
+        "personal"
+      ],
+      "commandLists": [
+        {
+          "scopes": [
+            "personal"
+          ],
+          "commands": [
+            {
+              "title": "Book room",
+              "description": "Schedule one of your favorite rooms for 30 minutes (default)"
+            },
+            {
+              "title": "Manage favorites",
+              "description": "Manage your favorite rooms"
+            },
+            {
+              "title": "Help",
+              "description": "Shows list of commands supported by the bot"
+            }
+          ]
+        }
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "<app domain>",
+    "token.botframework.com"
+  ]
+}

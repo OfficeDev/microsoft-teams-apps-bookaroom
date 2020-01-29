@@ -1,0 +1,142 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  <SpaRoot>ClientApp\</SpaRoot>
+  <TypeScriptToolsVersion>3.1</TypeScriptToolsVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ClientApp\public\**" />
+    <Compile Remove="Models\Request\**" />
+    <Compile Remove="Models\Response\**" />
+    <Compile Remove="Providers\**" />
+    <Compile Remove="wwwroot\app\**" />
+    <Content Remove="ClientApp\public\**" />
+    <Content Remove="Models\Request\**" />
+    <Content Remove="Models\Response\**" />
+    <Content Remove="Providers\**" />
+    <Content Remove="wwwroot\app\**" />
+    <EmbeddedResource Remove="ClientApp\public\**" />
+    <EmbeddedResource Remove="Models\Request\**" />
+    <EmbeddedResource Remove="Models\Response\**" />
+    <EmbeddedResource Remove="Providers\**" />
+    <EmbeddedResource Remove="wwwroot\app\**" />
+    <None Remove="ClientApp\public\**" />
+    <None Remove="Models\Request\**" />
+    <None Remove="Models\Response\**" />
+    <None Remove="Providers\**" />
+    <None Remove="wwwroot\app\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Controllers\ExchangeController.cs" />
+    <Compile Remove="Helpers\ExchangeSyncHelper.cs" />
+    <Compile Remove="Helpers\Interfaces\IExchangeSyncHelper.cs" />
+    <Compile Remove="Models\TableEntities\MeetingRoomCollection.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Providers\Interfaces\IActivityStorageProvider.cs" />
+    <Compile Include="Providers\Storage\ActivityStorageProvider.cs" />
+    <Compile Include="Providers\Interfaces\IUserConfigurationStorageProvider.cs" />
+    <Compile Include="Providers\Storage\UserConfigurationStorageProvider.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AdaptiveCards" Version="1.1.2" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.8.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Azure.Search" Version="10.1.0" />
+    <PackageReference Include="Microsoft.Bot.Builder.Azure" Version="4.2.2" />
+    <PackageReference Include="Microsoft.Bot.Builder.Dialogs" Version="4.6.3" />
+    <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.6.3" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.7.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.0.0" />
+    <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.0.0" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="TimeZoneConverter" Version="3.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Teams.App.BookAThing.Common\Microsoft.Teams.App.BookAThing.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+    <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\Strings.resx">
+        <Generator>PublicResXFileCodeGenerator</Generator>
+        <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Properties\" />
+    </ItemGroup>
+  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+    <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build --env.prod" />
+
+    <!-- Include the newly-built files in the publish output -->
+    <ItemGroup>
+      <DistFiles Include="dist\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="DebugRunWebpack" BeforeTargets="Build">
+    <!-- Ensure Node.js is installed -->
+    <Exec Command="node --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+    <!-- In development, the dist files won't exist on the first run or when cloning to a different machine, so rebuild them if not already present. -->
+    <Message Importance="high" Text="Performing first-run Webpack build..." />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+    <!--<Exec Command="node node_modules/webpack/bin/webpack.js" />-->
+
+    <ItemGroup>
+      <DistFiles Include="dist\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+    <ItemGroup>
+      <AdditionalFiles Include="$(SolutionDir)stylecop.json">
+        <Link>stylecop.json</Link>
+      </AdditionalFiles>
+    </ItemGroup>
+  </Target>
+</Project>

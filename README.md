@@ -3,51 +3,52 @@ page_type: sample
 languages:
 - csharp
 products:
-- dotnet
-description: "Add 150 character max description"
-urlFragment: "update-this-to-unique-url-stub"
+- office-teams
+description: Book-a-room bot lets you quickly find and book a meeting room on the go.
+urlFragment: microsoft-teams-apps-bookaroom
 ---
+# Book-a-room bot
 
-# Official Microsoft Sample
+| [Documentation](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki) | [Deployment guide](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Deployment-guide) | [Architecture](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Solution-Overview)
+|--|--|--|
 
-<!-- 
-Guidelines on README format: https://review.docs.microsoft.com/help/onboard/admin/samples/concepts/readme-template?branch=master
+Book-a-room bot lets you quickly find and book a meeting room on the go. The users can look at available rooms depending on the selected location/building and select one from the list to book the room for a default duration of 30 minutes from current time.
 
-Guidance on onboarding samples to docs.microsoft.com/samples: https://review.docs.microsoft.com/help/onboard/admin/samples/process/onboarding?branch=master
+As a first run experience, it will suggest you to mark your frequently booked rooms as favorites in the app to enable you to quick book the same room if available for future bookings.
 
-Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
--->
+If any of your favorite rooms are not available or if you want to book a room at a new location, you can use the option to book any other available room for a longer duration upto 90 minutes.
 
-Give a short description for your sample here. What does it do and why is it important?
+Book-a-room bot is designed to work in personal scope.
 
-## Contents
+A end-user interacting with Book-a-room bot:
 
-Outline the file contents of the repository. It helps users navigate the codebase, build configuration and any related assets.
+![Manage your favorite rooms](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-2.png)
+![User favorite rooms](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-1.png)
+![Room booking confirmation](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Images/Readme-3.png)
 
-| File/folder       | Description                                |
-|-------------------|--------------------------------------------|
-| `src`             | Sample source code.                        |
-| `.gitignore`      | Define what to ignore at commit time.      |
-| `CHANGELOG.md`    | List of changes to the sample.             |
-| `CONTRIBUTING.md` | Guidelines for contributing to the sample. |
-| `README.md`       | This README file.                          |
-| `LICENSE`         | The license for the sample.                |
 
-## Prerequisites
+## **Legal Notices**
 
-Outline the required components and tools that a user might need to have on their machine in order to run the sample. This can be anything from frameworks, SDKs, OS versions or IDE releases.
+Please read the license terms applicable to this template [here](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/blob/master/LICENSE) . In addition to these terms, you agree to the following:
 
-## Setup
+You are responsible for complying with all applicable privacy and security regulations, as well as all internal privacy and security policies of your company. You must also include your own privacy statement and terms of use for your app if you choose to deploy or share it broadly.
 
-Explain how to prepare the sample once the user clones or downloads the repository. The section should outline every step necessary to install dependencies and set up any settings (for example, API keys and output folders).
+Use and handling of any personal data collected by your app is your responsibility. Microsoft will not have any access to data collected through your app, and therefore is not responsible for any data related incidents.
 
-## Running the sample
+Any Microsoft trademarks and logos included in this repository are property of Microsoft and should not be reused, redistributed, modified, repurposed, or otherwise altered or used outside of this repository.
 
-Outline step-by-step instructions to execute the sample and see its output. Include steps for executing the sample from the IDE, starting specific services in the Azure portal or anything related to the overall launch of the code.
+## **Getting** **Started**
 
-## Key concepts
+Begin with the [Solution overview](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Solution-Overview) to read about what the app does and how it works.
 
-Provide users with more context on the tools and services used in the sample. Explain some of the code that is being used and how services interact with each other.
+When you're ready to try out book a room Bot, or to use it in your own organization, follow the steps in the [Deployment guide](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Deployment-guide).
+
+## **Feedback**
+
+Thoughts? Questions? Ideas? Share them with us on [Teams UserVoice](https://microsoftteams.uservoice.com/forums/555103-public) !
+
+Please report bugs and other code issues [here](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/issues/new).
+
 
 ## Contributing
 
