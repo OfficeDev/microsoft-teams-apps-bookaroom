@@ -4,7 +4,7 @@ languages:
 - csharp
 products:
 - office-teams
-description: Book-a-room bot will let you easily book a room on the go with minimum clicks as possible in a personal scope.
+description: Book-a-room bot lets you quickly find and book a meeting room on the go.
 urlFragment: microsoft-teams-apps-bookaroom
 ---
 # Book-a-room bot
@@ -12,11 +12,11 @@ urlFragment: microsoft-teams-apps-bookaroom
 | [Documentation](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki) | [Deployment guide](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Deployment-guide) | [Architecture](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/wiki/Solution-Overview)
 |--|--|--|
 
-Book-a-room bot will let you easily book a room on the go with minimum clicks as possible in a personal scope. The users can look at available rooms depending on the selected location/building and time and select one from the list to book the room for a default duration of 30 minutes.
+Book-a-room bot lets you quickly find and book a meeting room on the go. The users can look at available rooms depending on the selected location/building and select one from the list to book the room for a default duration of 30 minutes from current time.
 
 As a first run experience, it will suggest you to mark your frequently booked rooms as favorites in the app to enable you to quick book the same room if available for future bookings.
 
-If any of your favorite rooms are not available or if you want to book a rooms at a new location, you can use the option to book any other available room for longer duration.
+If any of your favorite rooms are not available or if you want to book a room at a new location, you can use the option to book any other available room for a longer duration upto 90 minutes.
 
 Book-a-room bot is designed to work in personal scope.
 
