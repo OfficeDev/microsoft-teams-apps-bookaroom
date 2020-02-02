@@ -31,11 +31,15 @@ A end-user interacting with Book-a-room bot:
 
 Please read the license terms applicable to this template [here](https://github.com/OfficeDev/microsoft-teams-apps-bookaroom/blob/master/LICENSE) . In addition to these terms, you agree to the following:
 
-You are responsible for complying with all applicable privacy and security regulations, as well as all internal privacy and security policies of your company. You must also include your own privacy statement and terms of use for your app if you choose to deploy or share it broadly.
-
-Use and handling of any personal data collected by your app is your responsibility. Microsoft will not have any access to data collected through your app, and therefore is not responsible for any data related incidents.
-
-Any Microsoft trademarks and logos included in this repository are property of Microsoft and should not be reused, redistributed, modified, repurposed, or otherwise altered or used outside of this repository.
+ - You are responsible for complying with privacy and security regulations applicable to your app.
+ 
+ - Use, collection, and handling of any personal data by your app is your responsibility alone.  Microsoft will not have any access to data collected through your app.  Microsoft will not responsible for any data related incidents or data subject requests.
+ 
+ - If your app is developed to be sideloaded internally within your organization, you agree to comply with all internal privacy and security policies of your organization.
+ 
+ - Use of this template does not guarantee acceptance of your app to Teams app store.  To make this app available in the Teams app store, you will have to comply with [submission process and validation](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/appsource/publish), and all associated requirements such as including your own privacy statement and terms of use for your app.
+ 
+ - Any Microsoft trademarks and logos included in this repository are property of Microsoft and should not be reused, redistributed, modified, repurposed, or otherwise altered or used outside of this repository.
 
 ## **Getting** **Started**
 
