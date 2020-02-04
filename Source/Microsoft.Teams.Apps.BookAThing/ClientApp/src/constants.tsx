@@ -27,13 +27,13 @@ export const DefaultStyles = {
     option: (styles: any, { data, isDisabled, isFocused, isSelected }: any) => {
         return {
             ...styles,
-            backgroundColor: isDisabled ? null : isSelected ? "#464775" : isFocused ? "#F3F2F1" : null,
+            backgroundColor: isDisabled ? null : isSelected ? "#6264A7" : isFocused ? "#F3F2F1" : null,
             color: isDisabled ? "#ccc" : isSelected ? "white" : isFocused ? "#252423" : "black",
             cursor: isDisabled ? "not-allowed" : "default",
 
             ":active": {
                 ...styles[":active"],
-                backgroundColor: !isDisabled && (isSelected ? "#464775" : isFocused ? "#F3F2F1" : "#F8F9F9"),
+                backgroundColor: !isDisabled && (isSelected ? "#6264A7" : isFocused ? "#F3F2F1" : "#F8F9F9"),
             },
         };
     }
@@ -53,13 +53,13 @@ export const DarkStyles = {
     option: (styles: any, { data, isDisabled, isFocused, isSelected }: any) => {
         return {
             ...styles,
-            backgroundColor: isDisabled ? null : isSelected ? "#464775" : isFocused ? "#F3F2F1" : null,
+            backgroundColor: isDisabled ? null : isSelected ? "#6264A7" : isFocused ? "#F3F2F1" : null,
             color: isDisabled ? "#ccc" : isSelected ? "white" : isFocused ? "#252423" : "white",
             cursor: isDisabled ? "not-allowed" : "default",
 
             ":active": {
                 ...styles[":active"],
-                backgroundColor: !isDisabled && (isSelected ? "#464775" : isFocused ? "#F3F2F1" : "#808080"),
+                backgroundColor: !isDisabled && (isSelected ? "#6264A7" : isFocused ? "#F3F2F1" : "#808080"),
             },
         };
     }
@@ -98,7 +98,7 @@ export const DefaultThemeColors = (theme: any) => {
         colors: {
             ...theme.colors,
             neutral0: "white",
-            primary: "#464775",
+            primary: "#6264A7",
             neutral5: "white",
             neutral80: "black",
             neutral50: "black"
@@ -113,7 +113,7 @@ export const DarkThemeColors = (theme: any) => {
             ...theme.colors,
             primary25: "#2d2c2c",
             neutral0: "#3b3a3a",
-            primary: "#464775",
+            primary: "#6264A7",
             neutral5: "#3b3a3a",
             neutral80: "white",
             neutral50: "white"

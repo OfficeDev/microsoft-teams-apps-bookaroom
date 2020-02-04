@@ -246,6 +246,15 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
                 return default;
             }
 
+            var userToken = await this.tokenHelper.GetUserTokenAsync(activity.From.Id);
+            if (string.IsNullOrEmpty(userToken))
+            {
+                // No token found for user. Trying to open task module after sign out.
+                this.telemetryClient.TrackTrace("User token is null in OnTeamsTaskModuleFetchAsync.");
+                await turnContext.SendActivityAsync(Strings.SignInErrorMessage).ConfigureAwait(false);
+                return default;
+            }
+
             var postedValues = JsonConvert.DeserializeObject<MeetingViewModel>(JObject.Parse(taskModuleRequest.Data.ToString()).SelectToken("data").ToString());
             var command = postedValues.Text;
             var token = this.tokenHelper.GenerateAPIAuthToken(activity.From.AadObjectId, activity.ServiceUrl, activity.From.Id, jwtExpiryMinutes: 60);

@@ -40,7 +40,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                     {
                         Type = ActionTypes.MessageBack,
                         Text = BotCommands.CancelMeeting,
-                        DisplayText = string.Empty,
                         Value = JsonConvert.SerializeObject(new MeetingViewModel
                         {
                             MeetingId = meeting.MeetingId,
@@ -102,7 +101,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                                 {
                                     Type = ActionTypes.MessageBack,
                                     Text = BotCommands.AddFavorite,
-                                    DisplayText = string.Empty,
                                     Value = JsonConvert.SerializeObject(new MeetingViewModel
                                     {
                                         RoomEmail = meeting.RoomEmail,

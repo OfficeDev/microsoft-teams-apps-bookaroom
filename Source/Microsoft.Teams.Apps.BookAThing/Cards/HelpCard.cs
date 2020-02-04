@@ -27,12 +27,13 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
             List<CardAction> buttons = new List<CardAction>();
             buttons.AddRange(new List<CardAction>
             {
-                new CardAction(ActionTypes.MessageBack, Strings.BookRoom, text: BotCommands.BookAMeeting, displayText: Strings.BookRoom, value: string.Empty),
+                new CardAction(ActionTypes.MessageBack, Strings.BookRoom, text: BotCommands.BookAMeeting, displayText: Strings.BookRoom),
                 new TaskModuleAction(Strings.ManageFavorites, new { data = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction { Text = BotCommands.ShowFavoriteTaskModule }) }),
             });
 
             var heroCard = new HeroCard
             {
+                Text = Strings.SupportedCommands,
                 Buttons = buttons,
             };
 

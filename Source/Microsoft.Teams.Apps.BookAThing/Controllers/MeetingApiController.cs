@@ -7,11 +7,14 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
+
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Teams.App.BookAThing.Common.Models.Error;
     using Microsoft.Teams.Apps.BookAThing.Common;
     using Microsoft.Teams.Apps.BookAThing.Common.Models.Response;
     using Microsoft.Teams.Apps.BookAThing.Common.Models.TableEntities;
@@ -35,7 +38,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// <summary>
         /// Number of rooms to load in dropdown initially.
         /// </summary>
-        private readonly int initialRoomCount = 5;
+        private const int InitialRoomCount = 5;
 
         /// <summary>
         /// Search service for searching room/building as per user input.
@@ -78,6 +81,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         private readonly IUserConfigurationProvider userConfigurationProvider;
 
         /// <summary>
+        /// Unauthorized error message response in case of user sign in failure.
+        /// </summary>
+        private const string SignInErrorCode = "signinRequired";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MeetingApiController"/> class.
         /// </summary>
         /// <param name="favoriteStorageProvider">Storage provider to perform fetch, insert, update and delete operation on UserFavorites table.</param>
@@ -104,15 +112,27 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// Get supported time zones for user from Graph API.
         /// </summary>
         /// <returns>Returns list of supported time zones.</returns>
-        public async Task<ActionResult> GetSupportedTimeZonesAsync()
+        public async Task<IActionResult> GetSupportedTimeZonesAsync()
         {
             try
             {
                 var claims = this.GetUserClaims();
                 this.telemetryClient.TrackTrace($"User {claims.UserObjectIdentifer} submitted request to get supported time zones.");
-                var token = await this.tokenHelper.GetUserTokenAsync(claims.FromId).ConfigureAwait(false);
-                var supportedTimeZone = await this.userConfigurationProvider.GetSupportedTimeZoneAsync(token).ConfigureAwait(false);
 
+                var token = await this.tokenHelper.GetUserTokenAsync(claims.FromId).ConfigureAwait(false);
+                if (string.IsNullOrEmpty(token))
+                {
+                    this.telemetryClient.TrackTrace($"Azure Active Directory access token for user {claims.UserObjectIdentifer} is empty. Cannot get supported time zones.");
+                    return this.StatusCode(
+                        StatusCodes.Status401Unauthorized,
+                        new Error
+                        {
+                            StatusCode = SignInErrorCode,
+                            ErrorMessage = "Azure Active Directory access token for user is found empty.",
+                        });
+                }
+
+                var supportedTimeZone = await this.userConfigurationProvider.GetSupportedTimeZoneAsync(token).ConfigureAwait(false);
                 if (supportedTimeZone.ErrorResponse != null)
                 {
                     // Graph API returned error message.
@@ -135,7 +155,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// <param name="configuration">User configuration object.</param>
         /// <returns>Returns HTTP ok status code for successful operation.</returns>
         [HttpPost]
-        public async Task<ActionResult> SaveTimeZoneAsync([FromBody]UserConfigurationEntity configuration)
+        public async Task<IActionResult> SaveTimeZoneAsync([FromBody]UserConfigurationEntity configuration)
         {
             try
             {
@@ -143,8 +163,8 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                 this.telemetryClient.TrackTrace($"User {claims.UserObjectIdentifer} submitted settings. Time zone- {configuration.IanaTimezone}");
                 configuration.UserAdObjectId = claims.UserObjectIdentifer;
                 configuration.WindowsTimezone = TZConvert.IanaToWindows(configuration.IanaTimezone);
-                var isAddOperationSuccess = await this.userConfigurationStorageProvider.AddAsync(configuration).ConfigureAwait(false);
 
+                var isAddOperationSuccess = await this.userConfigurationStorageProvider.AddAsync(configuration).ConfigureAwait(false);
                 if (isAddOperationSuccess)
                 {
                     return this.Ok("Configuration saved");
@@ -163,7 +183,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// Retrieves user configuration settings.
         /// </summary>
         /// <returns>Returns user configuration settings.</returns>
-        public async Task<ActionResult> GetUserTimeZoneAsync()
+        public async Task<IActionResult> GetUserTimeZoneAsync()
         {
             try
             {
@@ -182,17 +202,24 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         ///  Get favorite rooms of user.
         /// </summary>
         /// <returns>Returns list of favourite rooms.</returns>
-        public async Task<ActionResult<List<UserFavoriteRoomEntity>>> GetFavoriteRoomsAsync()
+        public async Task<IActionResult> GetFavoriteRoomsAsync()
         {
             try
             {
                 var claims = this.GetUserClaims();
                 this.telemetryClient.TrackTrace($"User {claims.UserObjectIdentifer} opened task module and requested favorite rooms.");
+
                 var token = await this.tokenHelper.GetUserTokenAsync(claims.FromId).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(token))
                 {
-                    this.telemetryClient.TrackTrace($"Token for user {claims.UserObjectIdentifer} is empty. Can not fetch favorite rooms.");
-                    return this.Unauthorized();
+                    this.telemetryClient.TrackTrace($"Azure Active Directory access token for user {claims.UserObjectIdentifer} is empty. Cannot get favorite rooms.");
+                    return this.StatusCode(
+                        StatusCodes.Status401Unauthorized,
+                        new Error
+                        {
+                            StatusCode = SignInErrorCode,
+                            ErrorMessage = "Azure Active Directory access token for user is found empty.",
+                        });
                 }
 
                 var userFavoriteRooms = await this.favoriteStorageProvider.GetAsync(claims.UserObjectIdentifer).ConfigureAwait(false);
@@ -210,7 +237,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// </summary>
         /// <param name="search">Schedule object.</param>
         /// <returns>Returns list of rooms.</returns>
-        public async Task<ActionResult<List<SearchResult>>> SearchRoomAsync([FromBody]ScheduleSearch search)
+        public async Task<IActionResult> SearchRoomAsync([FromBody]ScheduleSearch search)
         {
             try
             {
@@ -220,8 +247,14 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                 var token = await this.tokenHelper.GetUserTokenAsync(claims.FromId).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(token))
                 {
-                    this.telemetryClient.TrackTrace($"Token for user {claims.UserObjectIdentifer} is empty. Can not search rooms.");
-                    return this.Unauthorized();
+                    this.telemetryClient.TrackTrace($"Azure Active Directory access token for user {claims.UserObjectIdentifer} is empty. Cannot search rooms.");
+                    return this.StatusCode(
+                         StatusCodes.Status401Unauthorized,
+                         new Error
+                         {
+                             StatusCode = SignInErrorCode,
+                             ErrorMessage = "Azure Active Directory access token for user is found empty.",
+                         });
                 }
 
                 var searchServiceResults = await this.searchService.SearchRoomsAsync(search.Query).ConfigureAwait(false);
@@ -278,7 +311,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// </summary>
         /// <param name="search">Schedule search object.</param>
         /// <returns>Returns list of rooms.</returns>
-        public async Task<ActionResult<List<SearchResult>>> TopNRoomsAsync([FromBody]ScheduleSearch search)
+        public async Task<IActionResult> TopNRoomsAsync([FromBody]ScheduleSearch search)
         {
             try
             {
@@ -286,11 +319,17 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                 var token = await this.tokenHelper.GetUserTokenAsync(claims.FromId).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(token))
                 {
-                    this.telemetryClient.TrackTrace($"Token for user {claims.UserObjectIdentifer} is empty. Can not get rooms.");
-                    return this.Unauthorized();
+                    this.telemetryClient.TrackTrace($"Azure Active Directory access token for user {claims.UserObjectIdentifer} is empty. Cannot search rooms.");
+                    return this.StatusCode(
+                        (int)HttpStatusCode.Unauthorized,
+                        new Error
+                        {
+                            StatusCode = SignInErrorCode,
+                            ErrorMessage = "Azure Active Directory access token for user is found empty.",
+                        });
                 }
 
-                var allRooms = await this.roomCollectionStorageProvider.GetNRoomsAsync(this.initialRoomCount).ConfigureAwait(false);
+                var allRooms = await this.roomCollectionStorageProvider.GetNRoomsAsync(InitialRoomCount).ConfigureAwait(false);
                 if (allRooms == null)
                 {
                     return this.StatusCode(StatusCodes.Status500InternalServerError, "Unable to fetch rooms from storage");
@@ -346,7 +385,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// <param name="rooms">List of rooms.</param>
         /// <returns>Returns HTTP ok status code for successful operation.</returns>
         [HttpPost]
-        public async Task<ActionResult> SubmitFavoritesAsync([FromBody]IList<UserFavoriteRoomEntity> rooms)
+        public async Task<IActionResult> SubmitFavoritesAsync([FromBody]IList<UserFavoriteRoomEntity> rooms)
         {
             try
             {
@@ -401,12 +440,18 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                 var endUTCDateTime = startUTCDateTime.AddMinutes(meeting.Duration);
                 var startDateTime = TimeZoneInfo.ConvertTimeFromUtc(startUTCDateTime, TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(meeting.TimeZone)));
                 meeting.Time = startDateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                var token = await this.tokenHelper.GetUserTokenAsync(claims.FromId).ConfigureAwait(false);
 
+                var token = await this.tokenHelper.GetUserTokenAsync(claims.FromId).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(token))
                 {
-                    this.telemetryClient.TrackTrace($"Token for user {claims.UserObjectIdentifer} is empty. Can not create meeting.");
-                    return this.Unauthorized();
+                    this.telemetryClient.TrackTrace($"Azure Active Directory access token for user {claims.UserObjectIdentifer} is empty. Cannot create meeting.");
+                    return this.StatusCode(
+                        StatusCodes.Status401Unauthorized,
+                        new Error
+                        {
+                            StatusCode = SignInErrorCode,
+                            ErrorMessage = "Azure Active Directory access token for user is found empty.",
+                        });
                 }
 
                 this.telemetryClient.TrackTrace($"User {claims.UserObjectIdentifer} initiated meeting creation for {meeting.RoomName}");

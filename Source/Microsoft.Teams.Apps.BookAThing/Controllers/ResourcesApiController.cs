@@ -49,7 +49,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                     Strings.MeetingLength,
                     Strings.SearchRoom,
                     Strings.BookRoom,
-                    Strings.InvalidTenant,
                     Strings.SearchRoomDropdownPlaceholder,
                     Strings.ExceptionResponse,
                     Strings.TimezoneNotSupported,
@@ -63,6 +62,8 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                     Strings.FavoriteRoomExist,
                     Strings.SelectRoomToAdd,
                     Strings.NoFavoritesDescriptionTaskModule,
+                    Strings.SignInErrorMessage,
+                    Strings.InvalidTenant,
                 };
                 return this.Ok(strings);
             }

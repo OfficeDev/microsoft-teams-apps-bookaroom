@@ -83,7 +83,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                         Title = item.RoomName,
                         Subtitle = subtitle,
                         Type = "person",
-                        Tap = new CardAction { Type = ActionTypes.MessageBack, DisplayText = string.Empty, Title = BotCommands.CreateMeeting, Value = JsonConvert.SerializeObject(meeting) },
+                        Tap = new CardAction { Type = ActionTypes.MessageBack, Title = BotCommands.CreateMeeting, Value = JsonConvert.SerializeObject(meeting) },
                     });
                 }
             }
@@ -110,7 +110,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                     Title = Strings.Refresh,
                     Type = ActionTypes.MessageBack,
                     Text = BotCommands.RefreshList,
-                    DisplayText = string.Empty,
                     Value = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction { Text = BotCommands.RefreshList, ActivityReferenceId = activityReferenceId }),
                 };
 

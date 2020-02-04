@@ -122,7 +122,7 @@
     <comment>Add to favorites button text which is displayed on success card</comment>
   </data>
   <data name="AddFavTaskModuleSubtitle" xml:space="preserve">
-    <value>Add favorite rooms</value>
+    <value>Add and remove favorite rooms</value>
     <comment>Subtitle for task module for managing favorite rooms</comment>
   </data>
   <data name="AnotherRoomTaskModuleSubtitle" xml:space="preserve">
@@ -167,7 +167,7 @@
   </data>
   <data name="FavoriteRoomsModified" xml:space="preserve">
     <value>Modified favorite rooms list. Please refresh.</value>
-    <comment>Message to be displayed if favorite list card can not update</comment>
+    <comment>Message to be displayed if favorite list card cannot update</comment>
   </data>
   <data name="LoggedInSuccess" xml:space="preserve">
     <value>You are logged in successfully!</value>
@@ -206,7 +206,7 @@
     <comment>More rooms button text</comment>
   </data>
   <data name="Refresh" xml:space="preserve">
-    <value>Refresh list</value>
+    <value>Refresh</value>
     <comment>Refresh button text</comment>
   </data>
   <data name="Room" xml:space="preserve">
@@ -344,5 +344,13 @@
   <data name="NoFavoritesDescriptionTaskModule" xml:space="preserve">
     <value>Add a room to your list of favorites to get started.</value>
     <comment>Message to display if there are no favorite rooms found for user in task module</comment>
+  </data>
+  <data name="SignInErrorMessage" xml:space="preserve">
+    <value>You're not signed in to perform this action. Please type 'Sign in' to proceed.</value>
+    <comment>Bot response when user tries to open task module after log out.</comment>
+  </data>
+  <data name="SupportedCommands" xml:space="preserve">
+    <value>I can only support below commands.</value>
+    <comment>Text to be displayed in help card</comment>
   </data>
 </root>
