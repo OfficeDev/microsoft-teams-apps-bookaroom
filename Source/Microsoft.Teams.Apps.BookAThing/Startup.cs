@@ -81,7 +81,7 @@ namespace Microsoft.Teams.Apps.BookAThing
 
             services.AddSingleton(new OAuthClient(new MicrosoftAppCredentials(this.Configuration["MicrosoftAppId"], this.Configuration["MicrosoftAppPassword"])));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
-            services.AddSingleton<ITokenHelper>(provider => new TokenHelper(this.Configuration["SecurityKey"], this.Configuration["AppBaseUri"], this.Configuration["ConnectionName"], (OAuthClient)provider.GetService(typeof(OAuthClient))));
+            services.AddSingleton<ITokenHelper>(provider => new TokenHelper(this.Configuration["SecurityKey"], this.Configuration["AppBaseUri"], this.Configuration["ConnectionName"], (OAuthClient)provider.GetService(typeof(OAuthClient)), (TelemetryClient)provider.GetService(typeof(TelemetryClient))));
 
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();

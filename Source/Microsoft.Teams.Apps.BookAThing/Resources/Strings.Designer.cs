@@ -19,7 +19,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -79,7 +79,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add favorite rooms.
+        ///   Looks up a localized string similar to Add and remove favorite rooms.
         /// </summary>
         public static string AddFavTaskModuleSubtitle {
             get {
@@ -376,7 +376,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Refresh list.
+        ///   Looks up a localized string similar to Refresh.
         /// </summary>
         public static string Refresh {
             get {
@@ -493,11 +493,29 @@ namespace Microsoft.Teams.Apps.BookAThing.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You&apos;re not signed in to perform this action. Please type &apos;Sign in&apos; to proceed..
+        /// </summary>
+        public static string SignInErrorMessage {
+            get {
+                return ResourceManager.GetString("SignInErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sign in required.
         /// </summary>
         public static string SignInRequired {
             get {
                 return ResourceManager.GetString("SignInRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to I can only support below commands..
+        /// </summary>
+        public static string SupportedCommands {
+            get {
+                return ResourceManager.GetString("SupportedCommands", resourceCulture);
             }
         }
         

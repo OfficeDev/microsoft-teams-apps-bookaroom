@@ -10,6 +10,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Helpers
     using System.Security.Claims;
     using System.Text;
     using System.Threading.Tasks;
+    using Microsoft.ApplicationInsights;
     using Microsoft.Bot.Connector;
     using Microsoft.IdentityModel.Tokens;
     using Microsoft.Teams.Apps.BookAThing.Common;
@@ -40,18 +41,25 @@ namespace Microsoft.Teams.Apps.BookAThing.Helpers
         private readonly string connectionName;
 
         /// <summary>
+        /// Telemetry client to log event and errors.
+        /// </summary>
+        private readonly TelemetryClient telemetryClient;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TokenHelper"/> class.
         /// </summary>
         /// <param name="securityKey">Security key for generating and validating token.</param>
         /// <param name="appBaseUri">Application base Url.</param>
         /// <param name="connectionName">Active Directory authentication connection name.</param>
         /// <param name="oAuthClient">Used to retrieve user Active Directory access token from Bot Framework.</param>
-        public TokenHelper(string securityKey, string appBaseUri, string connectionName, OAuthClient oAuthClient)
+        /// <param name="telemetryClient">Telemetry client to log event and errors.</param>
+        public TokenHelper(string securityKey, string appBaseUri, string connectionName, OAuthClient oAuthClient, TelemetryClient telemetryClient)
         {
             this.securityKey = securityKey;
             this.appBaseUri = appBaseUri;
             this.connectionName = connectionName;
             this.oAuthClient = oAuthClient;
+            this.telemetryClient = telemetryClient;
         }
 
         /// <summary>
@@ -96,8 +104,19 @@ namespace Microsoft.Teams.Apps.BookAThing.Helpers
         /// <returns>A task that represents the work queued to execute.</returns>
         public async Task<string> GetUserTokenAsync(string fromId)
         {
-            var token = await this.oAuthClient.UserToken.GetAadTokensAsync(fromId, this.connectionName, new Bot.Schema.AadResourceUrls { ResourceUrls = new string[] { Constants.GraphAPIBaseUrl } }).ConfigureAwait(false);
-            return token?[Constants.GraphAPIBaseUrl]?.Token;
+            try
+            {
+                var token = await this.oAuthClient.UserToken.GetAadTokensAsync(fromId, this.connectionName, new Bot.Schema.AadResourceUrls { ResourceUrls = new string[] { Constants.GraphAPIBaseUrl } }).ConfigureAwait(false);
+                return token?[Constants.GraphAPIBaseUrl]?.Token;
+            }
+            catch (Exception ex)
+            {
+                // scenarios that will throw execptions are:
+                // 1. ValidationException: properties passed to GetAadTokensAsync are invalid  or null
+                // 2. bot service failed to fetch user token and throws exception "Operation returned an invalid status code"
+                this.telemetryClient.TrackException(ex);
+                return null;
+            }
         }
     }
 }

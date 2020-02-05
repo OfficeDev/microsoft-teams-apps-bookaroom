@@ -40,7 +40,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                     {
                         Type = ActionTypes.MessageBack,
                         Text = BotCommands.CancelMeeting,
-                        DisplayText = string.Empty,
                         Value = JsonConvert.SerializeObject(new MeetingViewModel
                         {
                             MeetingId = meeting.MeetingId,
@@ -57,26 +56,26 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
             var card = new AdaptiveCard("1.0")
             {
                 Body = new List<AdaptiveElement>
+                {
+                    new AdaptiveColumnSet
                     {
-                        new AdaptiveColumnSet
+                        Columns = new List<AdaptiveColumn>
                         {
-                            Columns = new List<AdaptiveColumn>
+                            new AdaptiveColumn { Width = AdaptiveColumnWidth.Auto, Items = new List<AdaptiveElement> { new AdaptiveImage { Url = new Uri(greenBar), PixelWidth = 4 } } },
+                            new AdaptiveColumn
                             {
-                                new AdaptiveColumn { Width = AdaptiveColumnWidth.Auto, Items = new List<AdaptiveElement> { new AdaptiveImage { Url = new Uri(greenBar), PixelWidth = 4 } } },
-                                new AdaptiveColumn
+                                Width = AdaptiveColumnWidth.Stretch,
+                                Items = new List<AdaptiveElement>
                                 {
-                                    Width = AdaptiveColumnWidth.Stretch,
-                                    Items = new List<AdaptiveElement>
-                                    {
-                                        new AdaptiveTextBlock { Text = Strings.MeetingBooked, Wrap = true, Size = AdaptiveTextSize.Large, Weight = AdaptiveTextWeight.Bolder },
-                                        new AdaptiveTextBlock { Text = meeting.RoomName, Wrap = true, Spacing = AdaptiveSpacing.Small },
-                                        new AdaptiveTextBlock { Text = meeting.BuildingName, Wrap = true, Spacing = AdaptiveSpacing.Small },
-                                        new AdaptiveTextBlock { Text = dateString, Wrap = true, Spacing = AdaptiveSpacing.Small },
-                                    },
+                                    new AdaptiveTextBlock { Text = Strings.MeetingBooked, Wrap = true, Size = AdaptiveTextSize.Large, Weight = AdaptiveTextWeight.Bolder },
+                                    new AdaptiveTextBlock { Text = meeting.RoomName, Wrap = true, Spacing = AdaptiveSpacing.Small },
+                                    new AdaptiveTextBlock { Text = meeting.BuildingName, Wrap = true, Spacing = AdaptiveSpacing.Small },
+                                    new AdaptiveTextBlock { Text = dateString, Wrap = true, Spacing = AdaptiveSpacing.Small },
                                 },
                             },
                         },
                     },
+                },
                 Actions = new List<AdaptiveAction>(),
             };
 
@@ -91,30 +90,29 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
             else
             {
                 card.Actions = new List<AdaptiveAction>
+                {
+                    cancelMeetingAction,
+                    new AdaptiveSubmitAction
                     {
-                        cancelMeetingAction,
-                        new AdaptiveSubmitAction
+                        Title = Strings.AddFavorite,
+                        Data = new AdaptiveSubmitActionData
                         {
-                            Title = Strings.AddFavorite,
-                            Data = new AdaptiveSubmitActionData
+                            Msteams = new CardAction
                             {
-                                Msteams = new CardAction
+                                Type = ActionTypes.MessageBack,
+                                Text = BotCommands.AddFavorite,
+                                Value = JsonConvert.SerializeObject(new MeetingViewModel
                                 {
-                                    Type = ActionTypes.MessageBack,
-                                    Text = BotCommands.AddFavorite,
-                                    DisplayText = string.Empty,
-                                    Value = JsonConvert.SerializeObject(new MeetingViewModel
-                                    {
-                                        RoomEmail = meeting.RoomEmail,
-                                        BuildingName = meeting.BuildingName,
-                                        RoomName = meeting.RoomName,
-                                        BuildingEmail = meeting.BuildingEmail,
-                                    }),
-                                },
+                                    RoomEmail = meeting.RoomEmail,
+                                    BuildingName = meeting.BuildingName,
+                                    RoomName = meeting.RoomName,
+                                    BuildingEmail = meeting.BuildingEmail,
+                                }),
                             },
                         },
-                        new AdaptiveOpenUrlAction { Title = Strings.Share, Url = new Uri(meeting.WebLink) },
-                    };
+                    },
+                    new AdaptiveOpenUrlAction { Title = Strings.Share, Url = new Uri(meeting.WebLink) },
+                };
             }
 
             var adaptiveCardAttachment = new Attachment()
@@ -122,6 +120,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                 ContentType = AdaptiveCard.ContentType,
                 Content = card,
             };
+
             return adaptiveCardAttachment;
         }
     }

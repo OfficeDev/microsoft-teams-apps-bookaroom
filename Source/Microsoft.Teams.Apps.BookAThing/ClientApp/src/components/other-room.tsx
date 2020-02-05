@@ -52,8 +52,15 @@ interface IState {
     selectedTimeZone: any,
     /**Boolean indicating if time zones are loading in dropdown */
     timeZonesLoading: boolean,
-    resourceStrings: any
+    resourceStrings: any,
+    errorResponseDetail: IErrorResponse,
 };
+
+/**Server error response interface */
+interface IErrorResponse {
+    statusCode?: string,
+    errorMessage?: string,
+}
 
 /** 
  *  OtherRoom component.
@@ -97,7 +104,11 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
             supportedTimeZones: [],
             selectedTimeZone: null,
             timeZonesLoading: false,
-            resourceStrings: {}
+            resourceStrings: {},
+            errorResponseDetail: {
+                errorMessage: undefined,
+                statusCode: undefined,
+            },
         };
 
         let search = window.location.search;
@@ -211,6 +222,16 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
         this.setState({ timeZonesLoading: false });
 
         if (supportedTimeZones.status === 401) {
+            const response = await supportedTimeZones.json();
+            if (response) {
+                this.setState({
+                    errorResponseDetail: {
+                        errorMessage: response.message,
+                        statusCode: response.code,
+                    }
+                })
+            }
+
             this.setState({ authorized: false, loading: false });
             this.appInsights.trackTrace({ message: `User ${this.userObjectIdentifier} is unauthorized!`, severityLevel: SeverityLevel.Warning });
         }
@@ -326,6 +347,16 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
         });
 
         if (res.status === 401) {
+            const response = await res.json();
+            if (response) {
+                this.setState({
+                    errorResponseDetail: {
+                        errorMessage: response.message,
+                        statusCode: response.code,
+                    }
+                })
+            }
+
             this.appInsights.trackTrace({ message: `User ${this.userObjectIdentifier} is unauthorized!`, severityLevel: SeverityLevel.Warning });
             this.setState({ authorized: false });
             return [];
@@ -360,6 +391,16 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
             });
 
             if (res.status === 401) {
+                const response = await res.json();
+                if (response) {
+                    this.setState({
+                        errorResponseDetail: {
+                            errorMessage: response.message,
+                            statusCode: response.code,
+                        }
+                    })
+                }
+
                 this.setState({ authorized: false });
                 this.appInsights.trackTrace({ message: `User ${this.userObjectIdentifier} is unauthorized!`, severityLevel: SeverityLevel.Warning });
                 return [];
@@ -492,6 +533,16 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
                 });
 
                 if (res.status === 401) {
+                    const response = await res.json();
+                    if (response) {
+                        this.setState({
+                            errorResponseDetail: {
+                                errorMessage: response.message,
+                                statusCode: response.code,
+                            }
+                        })
+                    }
+
                     this.setState({ authorized: false, loading: false });
                 }
                 else if (res.status === 200) {
@@ -519,7 +570,7 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
         }
     }
 
-    /** Show error message. */
+    /** Show validation error message. */
     showError() {
         if (this.state.showMessage === true) {
             return (
@@ -529,6 +580,17 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
         else {
             return (<Text error content="" />);
         }
+    }
+
+    /** render unauthorized error messages based on status code */
+    renderErrorMessage = () => {
+        if (this.state.errorResponseDetail.statusCode === "signinRequired") {
+            return (
+                <Text content={this.state.resourceStrings.SignInErrorMessage} style={{ color: Constants.ErrorMessageRedColor }} />
+            );
+        }
+
+        return <Text content={this.state.resourceStrings.InvalidTenant} style={{ color: Constants.ErrorMessageRedColor }} />
     }
 
     /** Render function. */
@@ -590,7 +652,7 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
                         <div className="containerdiv">
                             <div className="containerdiv-unauthorized">
                                 <Flex gap="gap.small" vAlign="center" hAlign="center">
-                                    <Text content={self.state.resourceStrings.InvalidTenant} style={{ color: Constants.ErrorMessageRedColor }} />
+                                    {self.renderErrorMessage()}
                                 </Flex>
                             </div>
                         </div>

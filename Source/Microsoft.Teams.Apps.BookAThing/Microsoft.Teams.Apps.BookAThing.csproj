@@ -3,53 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-  <SpaRoot>ClientApp\</SpaRoot>
-  <TypeScriptToolsVersion>3.1</TypeScriptToolsVersion>
+    <SpaRoot>ClientApp\</SpaRoot>
+    <TypeScriptToolsVersion>3.1</TypeScriptToolsVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ClientApp\public\**" />
-    <Compile Remove="Models\Request\**" />
-    <Compile Remove="Models\Response\**" />
-    <Compile Remove="Providers\**" />
-    <Compile Remove="wwwroot\app\**" />
-    <Content Remove="ClientApp\public\**" />
-    <Content Remove="Models\Request\**" />
-    <Content Remove="Models\Response\**" />
-    <Content Remove="Providers\**" />
-    <Content Remove="wwwroot\app\**" />
-    <EmbeddedResource Remove="ClientApp\public\**" />
-    <EmbeddedResource Remove="Models\Request\**" />
-    <EmbeddedResource Remove="Models\Response\**" />
-    <EmbeddedResource Remove="Providers\**" />
-    <EmbeddedResource Remove="wwwroot\app\**" />
-    <None Remove="ClientApp\public\**" />
-    <None Remove="Models\Request\**" />
-    <None Remove="Models\Response\**" />
-    <None Remove="Providers\**" />
-    <None Remove="wwwroot\app\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Controllers\ExchangeController.cs" />
-    <Compile Remove="Helpers\ExchangeSyncHelper.cs" />
-    <Compile Remove="Helpers\Interfaces\IExchangeSyncHelper.cs" />
-    <Compile Remove="Models\TableEntities\MeetingRoomCollection.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <AdditionalFiles Include="stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Providers\Interfaces\IActivityStorageProvider.cs" />
-    <Compile Include="Providers\Storage\ActivityStorageProvider.cs" />
-    <Compile Include="Providers\Interfaces\IUserConfigurationStorageProvider.cs" />
-    <Compile Include="Providers\Storage\UserConfigurationStorageProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -83,22 +42,19 @@
     </Compile>
   </ItemGroup>
 
-    <ItemGroup>
+  <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
-    <ItemGroup>
-      <EmbeddedResource Update="Resources\Strings.resx">
-        <Generator>PublicResXFileCodeGenerator</Generator>
-        <LastGenOutput>Strings.Designer.cs</LastGenOutput>
-      </EmbeddedResource>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Properties\" />
-    </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  
   <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
     <!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />

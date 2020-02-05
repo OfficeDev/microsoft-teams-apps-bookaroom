@@ -61,8 +61,16 @@ interface IState {
     /**Boolean indicating if time zones are loading in dropdown */
     timeZonesLoading: boolean,
     resourceStrings: any,
-    resourceStringsLoaded: boolean
+    resourceStringsLoaded: boolean,
+    isRoomDeleted: boolean,
+    errorResponseDetail: IErrorResponse,
 };
+
+/**Server error response interface */
+interface IErrorResponse {
+    statusCode?: string,
+    errorMessage?: string,
+}
 
 /** Component for managing user favorites. */
 class AddFavorites extends React.Component<IAddFavoriteProps, IState>
@@ -106,7 +114,12 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
             selectedTimeZone: null,
             timeZonesLoading: false,
             resourceStrings: {},
-            resourceStringsLoaded: false
+            resourceStringsLoaded: false,
+            isRoomDeleted: false,
+            errorResponseDetail: {
+                errorMessage: undefined,
+                statusCode: undefined,
+            },
         };
 
         let search = window.location.search;
@@ -217,15 +230,25 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
             })
         });
 
-        const supportedTimeZones = await fetch(request);
+        const supportedTimezoneResponse = await fetch(request);
         this.setState({ timeZonesLoading: false });
 
-        if (supportedTimeZones.status === 401) {
+        if (supportedTimezoneResponse.status === 401) {
+            const response = await supportedTimezoneResponse.json();
+            if (response) {
+                this.setState({
+                    errorResponseDetail: {
+                        errorMessage: response.message,
+                        statusCode: response.code,
+                    }
+                })
+            }
+
             this.setState({ authorized: false });
             this.appInsights.trackEvent({ name: `Unauthorized` }, { User: this.userObjectId });
         }
-        else if (supportedTimeZones.status === 200) {
-            const response = await supportedTimeZones.json();
+        else if (supportedTimezoneResponse.status === 200) {
+            const response = await supportedTimezoneResponse.json();
             if (response !== null) {
                 this.setState({ supportedTimeZones: response });
                 let self = this;
@@ -239,12 +262,12 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
                 }
             }
             else {
-                this.appInsights.trackTrace({ message: `'GetSupportedTimezones' - Request failed:${supportedTimeZones.status}`, severityLevel: SeverityLevel.Warning });
+                this.appInsights.trackTrace({ message: `'GetSupportedTimezones' - Request failed:${supportedTimezoneResponse.status}`, severityLevel: SeverityLevel.Warning });
                 this.setMessage(this.state.resourceStrings.ExceptionResponse, Constants.ErrorMessageRedColor, false);
             }
         }
         else {
-            this.appInsights.trackTrace({ message: `'TopFiveRoomsAsync' - Request failed:${supportedTimeZones.status}`, severityLevel: SeverityLevel.Warning });
+            this.appInsights.trackTrace({ message: `'TopFiveRoomsAsync' - Request failed:${supportedTimezoneResponse.status}`, severityLevel: SeverityLevel.Warning });
             this.setMessage(this.state.resourceStrings.ExceptionResponse, Constants.ErrorMessageRedColor, false);
         }
     }
@@ -259,14 +282,14 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
             })
         });
 
-        const savedTimeZone = await fetch(request);
-        if (savedTimeZone.status === 401) {
+        const timezoneResponse = await fetch(request);
+        if (timezoneResponse.status === 401) {
             this.setState({ authorized: false });
             this.appInsights.trackEvent({ name: `Unauthorized` }, { User: this.userObjectId });
         }
-        else if (savedTimeZone.status === 200) {
-            const response = await savedTimeZone.json();
-            if (response !== null) {
+        else if (timezoneResponse.status === 200) {
+            const response = await timezoneResponse.json();
+            if (response) {
                 this.setState({ selectedTimeZone: response.IanaTimezone });
                 this.userTimeZone = response.IanaTimezone;
             }
@@ -274,11 +297,11 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
                 this.getSupportedTimeZones();
             }
         }
-        else if (savedTimeZone.status === 204) {
+        else if (timezoneResponse.status === 204) {
             this.getSupportedTimeZones();
         }
         else {
-            this.appInsights.trackTrace({ message: `'TopFiveRoomsAsync' - Request failed:${savedTimeZone.status}`, severityLevel: SeverityLevel.Warning });
+            this.appInsights.trackTrace({ message: `'TopFiveRoomsAsync' - Request failed:${timezoneResponse.status}`, severityLevel: SeverityLevel.Warning });
             this.setMessage(this.state.resourceStrings.ExceptionResponse, Constants.ErrorMessageRedColor, false);
         }
     }
@@ -323,6 +346,16 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
         });
 
         if (res.status === 401) {
+            const response = await res.json();
+            if (response) {
+                this.setState({
+                    errorResponseDetail: {
+                        errorMessage: response.message,
+                        statusCode: response.code,
+                    }
+                })
+            }
+
             this.appInsights.trackEvent({ name: `Unauthorized` }, { User: this.userObjectId });
             this.setState({ authorized: false });
         }
@@ -416,12 +449,12 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
                                 <div>
                                     <Text weight="bold" content={this.state.resourceStrings.NoFavoriteRoomsTaskModule} /><br />
                                     <Text content={this.state.resourceStrings.NoFavoritesDescriptionTaskModule} />
-                                </div>   
+                                </div>
                             </Flex>
                         </Flex.Item>
                     </Flex>
-                    );
-                
+                );
+
             }
         }
     }
@@ -437,6 +470,16 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
         const favoriteRooms = await fetch(request);
 
         if (favoriteRooms.status === 401) {
+            const response = await favoriteRooms.json();
+            if (response) {
+                this.setState({
+                    errorResponseDetail: {
+                        errorMessage: response.message,
+                        statusCode: response.code,
+                    }
+                })
+            }
+
             this.appInsights.trackEvent({ name: `Unauthorized` }, { User: this.userObjectId });
             this.setState({ authorized: false, loadingFavoriteList: false });
         }
@@ -500,7 +543,7 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
         favoritesList.splice(index, 1);
         this.appInsights.trackEvent({ name: `Removed from favorite` }, { User: this.userObjectId, Room: room.RoomEmail });
         this.appInsights.trackTrace({ message: "User " + this.userObjectId + " removed room " + room.RoomName + " from favorites in client app" });
-        this.setState({ favoriteRooms: favoritesList, showMessage: false });
+        this.setState({ favoriteRooms: favoritesList, showMessage: false, isRoomDeleted: true });
     }
 
     /** 
@@ -564,17 +607,26 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
             });
 
             if (searchedRooms.status === 401) {
+                const response = await searchedRooms.json();
+                if (response) {
+                    this.setState({
+                        errorResponseDetail: {
+                            errorMessage: response.message,
+                            statusCode: response.code,
+                        }
+                    })
+                }
+
                 this.appInsights.trackEvent({ name: `Unauthorized` }, { User: this.userObjectId });
                 this.setState({ authorized: false });
                 return [];
             }
             else if (searchedRooms.status === 200) {
-                let response = await searchedRooms.json();
-                return response;
+                return await searchedRooms.json();
             }
             else {
-                this.appInsights.trackTrace({ message: `'TopFiveRoomsAsync' - Request failed:${searchedRooms.status}`, severityLevel: SeverityLevel.Warning });
                 this.setMessage(this.state.resourceStrings.ExceptionResponse, Constants.ErrorMessageRedColor, false);
+                this.appInsights.trackTrace({ message: `'SearchRoomAsync' - Request failed:${searchedRooms.status}`, severityLevel: SeverityLevel.Warning });
             }
         }
         else {
@@ -600,7 +652,7 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
         this.setState({ selectedRoom: optionSelected, addDisable: false, showMessage: false });
     }
 
-    /** Render error message. */
+    /** Render validation message. */
     renderMessage() {
         if (this.state.showMessage === true) {
             return (
@@ -637,6 +689,17 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
         if (open && this.state.supportedTimeZones.length == 0) {
             this.getSupportedTimeZones();
         }
+    }
+
+    /** render unauthorized error messages based on status code */
+    renderErrorMessage = () => {
+        if (this.state.errorResponseDetail.statusCode === "signinRequired") {
+            return (
+                <Text content={this.state.resourceStrings.SignInErrorMessage} style={{ color: Constants.ErrorMessageRedColor }} />
+            );
+        }
+
+        return <Text content={this.state.resourceStrings.InvalidTenant} style={{ color: Constants.ErrorMessageRedColor }} />
     }
 
     /** Render function. */
@@ -692,7 +755,7 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
                                         <Flex.Item grow>
                                             {self.renderMessage()}
                                         </Flex.Item>
-                                        <Button loading={self.state.loading} disabled={self.state.selectedTimeZone === null || self.state.loading === true || self.state.favoriteRooms === null || self.state.favoriteRooms.length === 0} primary onClick={() => self.submit()} content={self.state.resourceStrings.DoneButton} />
+                                        <Button loading={self.state.loading} disabled={self.state.selectedTimeZone === null || self.state.loading === true || self.state.favoriteRooms === null || (self.state.favoriteRooms.length === 0 && self.state.isRoomDeleted === false)} primary onClick={() => self.submit()} content={self.state.resourceStrings.DoneButton} />
                                     </Flex>
                                 </div>
                             </div>
@@ -709,7 +772,7 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
                         <div className="containerdiv">
                             <div className="containerdiv-unauthorized">
                                 <Flex gap="gap.small" vAlign="center" hAlign="center">
-                                    <Text content={self.state.resourceStrings.InvalidTenant} style={{ color: Constants.ErrorMessageRedColor }} />
+                                    {self.renderErrorMessage()}
                                 </Flex>
                             </div>
                         </div>
