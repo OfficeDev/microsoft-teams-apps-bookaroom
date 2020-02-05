@@ -82,27 +82,27 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                 {
                     new AdaptiveSubmitAction
                     {
-                         Title = Strings.BookRoom,
-                         Data = new AdaptiveSubmitActionData
-                         {
+                        Title = Strings.BookRoom,
+                        Data = new AdaptiveSubmitActionData
+                        {
                             Msteams = new CardAction
                             {
                                 Type = ActionTypes.MessageBack,
                                 Text = BotCommands.BookAMeeting,
                             },
-                         },
+                        },
                     },
                     new AdaptiveSubmitAction
                     {
                         Title = Strings.ManageFavorites,
                         Data = new AdaptiveSubmitActionData
-                         {
+                        {
                             Msteams = new CardAction
                             {
                                 Type = ActionTypes.MessageBack,
                                 Text = BotCommands.ManageFavorites,
                             },
-                         },
+                        },
                     },
                 },
             };
@@ -112,6 +112,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                 ContentType = AdaptiveCard.ContentType,
                 Content = card,
             };
+
             return adaptiveCardAttachment;
         }
     }
