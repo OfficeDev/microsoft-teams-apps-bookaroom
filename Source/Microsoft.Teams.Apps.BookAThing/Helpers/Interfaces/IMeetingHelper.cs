@@ -7,6 +7,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Helpers
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Teams.Apps.BookAThing.Common.Models.Response;
+    using Microsoft.Teams.Apps.BookAThing.Common.Models.TableEntities;
     using Microsoft.Teams.Apps.BookAThing.Models;
 
     /// <summary>
@@ -30,5 +31,12 @@ namespace Microsoft.Teams.Apps.BookAThing.Helpers
         /// <param name="token">User Active Directory token.</param>
         /// <returns>List of schedule for rooms.</returns>
         Task<RoomScheduleResponse> GetRoomScheduleAsync(ScheduleSearch search, IList<string> rooms, string token);
+
+        /// <summary>
+        /// Checks memory cache for cached rooms, compares deleted rooms with user favorites and returns filtered rooms.
+        /// </summary>
+        /// <param name="userFavorites">User favorite rooms from Azure table storage.</param>
+        /// <returns>Filtered favorite rooms.</returns>
+        Task<List<UserFavoriteRoomEntity>> FilterFavoriteRoomsAsync(List<UserFavoriteRoomEntity> userFavorites);
     }
 }

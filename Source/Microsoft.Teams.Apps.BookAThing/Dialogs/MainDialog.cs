@@ -66,6 +66,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
         private readonly IUserConfigurationStorageProvider userConfigurationStorageProvider;
 
         /// <summary>
+        /// Helper class which exposes methods required for meeting creation.
+        /// </summary>
+        private readonly IMeetingHelper meetingHelper;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MainDialog"/> class.
         /// </summary>
         /// <param name="configuration">Application configuration.</param>
@@ -75,7 +80,8 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
         /// <param name="tokenHelper">Helper for generating and validating JWT token.</param>
         /// <param name="telemetryClient">Telemetry client for logging events and errors.</param>
         /// <param name="userConfigurationStorageProvider">Storage provider to perform fetch operation on UserConfiguration table.</param>
-        public MainDialog(IConfiguration configuration, IMeetingProvider meetingProvider, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, ITokenHelper tokenHelper, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider)
+        /// <param name="meetingHelper">Helper class which exposes methods required for meeting creation.</param>
+        public MainDialog(IConfiguration configuration, IMeetingProvider meetingProvider, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, ITokenHelper tokenHelper, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider, IMeetingHelper meetingHelper)
             : base(nameof(MainDialog), configuration["ConnectionName"], telemetryClient)
         {
             this.tokenHelper = tokenHelper;
@@ -84,6 +90,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
             this.favoriteStorageProvider = favoriteStorageProvider;
             this.userConfigurationStorageProvider = userConfigurationStorageProvider;
             this.meetingProvider = meetingProvider;
+            this.meetingHelper = meetingHelper;
             this.AddDialog(new OAuthPrompt(
                  nameof(OAuthPrompt),
                  new OAuthPromptSettings
@@ -237,9 +244,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
         private async Task ShowRoomsAsync(WaterfallStepContext stepContext, TokenResponse tokenResponse, bool refresh)
         {
             var activity = stepContext.Context.Activity;
-            var userFavorites = await this.favoriteStorageProvider.GetAsync(activity.From.AadObjectId).ConfigureAwait(false);
             var startUTCTime = DateTime.UtcNow.AddMinutes(Constants.DurationGapFromNow.Minutes);
             var endUTCTime = startUTCTime.AddMinutes(Constants.DefaultMeetingDuration.Minutes);
+
+            var userFavorites = await this.favoriteStorageProvider.GetAsync(activity.From.AadObjectId).ConfigureAwait(false);
 
             RoomScheduleResponse roomsScheduleResponse = new RoomScheduleResponse
             {
@@ -260,8 +268,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                 }
             }
 
+            userFavorites = await this.meetingHelper.FilterFavoriteRoomsAsync(userFavorites?.ToList()).ConfigureAwait(false);
             if (userFavorites?.Count > 0)
             {
+                // Get schedule for favorite rooms.
                 var startTime = TimeZoneInfo.ConvertTimeFromUtc(startUTCTime, TimeZoneInfo.FindSystemTimeZoneById(userConfiguration.WindowsTimezone));
                 var endTime = startTime.AddMinutes(Constants.DefaultMeetingDuration.Minutes);
                 roomsScheduleResponse = await this.GetRoomsScheduleAsync(startTime, endTime, userConfiguration.IanaTimezone, userFavorites, tokenResponse.Token).ConfigureAwait(false);
@@ -532,6 +542,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
             var startTime = TimeZoneInfo.ConvertTimeFromUtc(startUTCTime, TimeZoneInfo.FindSystemTimeZoneById(userConfiguration.WindowsTimezone));
             var endTime = startTime.AddMinutes(Constants.DefaultMeetingDuration.Minutes);
 
+            rooms = await this.meetingHelper.FilterFavoriteRoomsAsync(rooms?.ToList()).ConfigureAwait(false);
             if (rooms?.Count > 0)
             {
                 var roomsScheduleResponse = await this.GetRoomsScheduleAsync(startTime, endTime, localTimeZone: userConfiguration.IanaTimezone, rooms, userToken).ConfigureAwait(false);

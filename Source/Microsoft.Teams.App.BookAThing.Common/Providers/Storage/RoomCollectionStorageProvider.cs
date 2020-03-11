@@ -9,8 +9,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
+    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Teams.Apps.BookAThing.Common.Models.TableEntities;
     using Microsoft.WindowsAzure.Storage;
+    using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
 
     /// <summary>
@@ -64,7 +66,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         /// </summary>
         private enum BatchOperation
         {
-            Insert,
+            InsertOrReplace,
             Delete,
         }
 
@@ -79,9 +81,9 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
             {
                 await this.EnsureInitializedAsync();
                 string partitionKeyCondition = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, buildingEmail);
-                TableQuery<MeetingRoomEntity> query = new TableQuery<MeetingRoomEntity>().Where(partitionKeyCondition);
+                var query = new TableQuery<MeetingRoomEntity>().Where(partitionKeyCondition);
                 TableContinuationToken continuationToken = null;
-                List<MeetingRoomEntity> rooms = new List<MeetingRoomEntity>();
+                var rooms = new List<MeetingRoomEntity>();
 
                 do
                 {
@@ -101,7 +103,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Get 'N' rooms from storage where 'N' is room count.
+        /// Get top 'N' rooms from Azure table storage where 'N' is room count.
         /// </summary>
         /// <param name="roomCount">Number of rooms to be fetched.</param>
         /// <returns>List of meeting rooms.</returns>
@@ -110,13 +112,14 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
             try
             {
                 await this.EnsureInitializedAsync();
-                TableQuery<MeetingRoomEntity> query = new TableQuery<MeetingRoomEntity>
+                var query = new TableQuery<MeetingRoomEntity>
                 {
                     TakeCount = roomCount,
+                    FilterString = "IsDeleted eq false",
                 };
 
                 TableContinuationToken continuationToken = null;
-                List<MeetingRoomEntity> rooms = new List<MeetingRoomEntity>();
+                var rooms = new List<MeetingRoomEntity>();
                 var queryResult = await this.cloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
                 if (queryResult?.Results != null)
                 {
@@ -136,14 +139,13 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         /// Delete all rooms associated with a building.
         /// </summary>
         /// <param name="rooms">List of rooms.</param>
-        /// <returns>Boolean indicating operation result.</returns>
+        /// <returns>Returns true if batch operation for deleting rooms succeeds.</returns>
         public async Task<bool> DeleteAsync(IList<MeetingRoomEntity> rooms)
         {
             try
             {
                 await this.EnsureInitializedAsync();
-                TableBatchOperation deleteBatchOperation = new TableBatchOperation();
-                return await this.ExecuteBatchOperation(BatchOperation.Delete, rooms);
+                return await this.ExecuteBatchOperationAsync(BatchOperation.Delete, rooms).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -153,17 +155,16 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Add rooms to storage.
+        /// Update rooms in Azure table storage as per change in Microsoft Exchange.
         /// </summary>
-        /// <param name="rooms">List of rooms.</param>
-        /// <returns>Boolean indicating operation result.</returns>
-        public async Task<bool> AddAsync(IList<MeetingRoomEntity> rooms)
+        /// <param name="roomCollection">List of rooms which got deleted from Exchange.</param>
+        /// <returns>Returns true if batch operation for updating rooms succeeds.</returns>
+        public async Task<bool> UpdateDeletedRoomsAsync(IList<MeetingRoomEntity> roomCollection)
         {
             try
             {
                 await this.EnsureInitializedAsync();
-                TableBatchOperation addBatchOperation = new TableBatchOperation();
-                return await this.ExecuteBatchOperation(BatchOperation.Insert, rooms);
+                return await this.ExecuteBatchOperationAsync(BatchOperation.InsertOrReplace, roomCollection).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -173,7 +174,26 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Get all rooms stored in azure table storage.
+        /// Add rooms to Azure table storage.
+        /// </summary>
+        /// <param name="rooms">List of rooms.</param>
+        /// <returns>Returns true if batch operation for inserting rooms succeeds.</returns>
+        public async Task<bool> AddOrReplaceAsync(IList<MeetingRoomEntity> rooms)
+        {
+            try
+            {
+                await this.EnsureInitializedAsync();
+                return await this.ExecuteBatchOperationAsync(BatchOperation.InsertOrReplace, rooms).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Get all rooms stored in Azure table storage.
         /// </summary>
         /// <returns>List of all rooms.</returns>
         public async Task<IList<MeetingRoomEntity>> GetAllAsync()
@@ -181,13 +201,17 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
             try
             {
                 await this.EnsureInitializedAsync();
-                TableQuery<MeetingRoomEntity> query = new TableQuery<MeetingRoomEntity>();
+                var query = new TableQuery<MeetingRoomEntity>();
                 TableContinuationToken continuationToken = null;
-                List<MeetingRoomEntity> rooms = new List<MeetingRoomEntity>();
+                var rooms = new List<MeetingRoomEntity>();
                 do
                 {
                     var queryResult = await this.cloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
-                    rooms.AddRange(queryResult);
+                    if (queryResult != null)
+                    {
+                        rooms.AddRange(queryResult);
+                    }
+
                     continuationToken = queryResult?.ContinuationToken;
                 }
                 while (continuationToken != null);
@@ -202,33 +226,33 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Executes batch add or delete operation on table.
+        /// Executes batch add or delete operation on Azure table storage.
         /// </summary>
         /// <param name="batchOperation">Batch operation to be performed.</param>
         /// <param name="rooms">List of rooms.</param>
-        /// <returns>Boolean indicating operation result.</returns>
-        private async Task<bool> ExecuteBatchOperation(BatchOperation batchOperation, IList<MeetingRoomEntity> rooms)
+        /// <returns>Returns true if batch operation is successful else throws exception for error.</returns>
+        private async Task<bool> ExecuteBatchOperationAsync(BatchOperation batchOperation, IList<MeetingRoomEntity> rooms)
         {
+            var tableBatchOperation = new TableBatchOperation();
             try
             {
-                TableBatchOperation tableBatchOperation = new TableBatchOperation();
-                int count = (int)Math.Ceiling((double)rooms.Count / RoomsPerBatch);
-                for (int i = 0; i < count; i++)
+                int batchCount = (int)Math.Ceiling((double)rooms.Count / RoomsPerBatch);
+                for (int i = 0; i < batchCount; i++)
                 {
+                    tableBatchOperation.Clear();
                     var roomsBatch = rooms.Skip(i * RoomsPerBatch).Take(RoomsPerBatch);
                     foreach (var room in roomsBatch)
                     {
-                        tableBatchOperation.Add(batchOperation == BatchOperation.Insert ? TableOperation.Insert(room) : TableOperation.Delete(room));
+                        tableBatchOperation.Add(batchOperation == BatchOperation.InsertOrReplace ? TableOperation.InsertOrReplace(room) : TableOperation.Delete(room));
+                    }
+
+                    if (tableBatchOperation.Count > 0)
+                    {
+                        await this.cloudTable.ExecuteBatchAsync(tableBatchOperation).ConfigureAwait(false);
                     }
                 }
 
-                if (tableBatchOperation.Count > 0)
-                {
-                    var result = await this.cloudTable.ExecuteBatchAsync(tableBatchOperation).ConfigureAwait(false);
-                    return result?.Count > 0;
-                }
-
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -238,7 +262,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Ensure table storage connection is initialized.
+        /// Ensure Azure table storage connection is initialized.
         /// </summary>
         /// <returns>A task that represents the work queued to execute.</returns>
         private async Task EnsureInitializedAsync()
@@ -247,16 +271,23 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Create tables if it doesn't exists.
+        /// Create Azure storage table if it doesn't exists.
         /// </summary>
-        /// <param name="connectionString">storage account connection string.</param>
+        /// <param name="connectionString">Storage account connection string.</param>
         /// <returns>A task that represents the work queued to execute.</returns>
         private async Task InitializeAsync(string connectionString)
         {
+            // Exponential retry policy with backoff of 3 seconds and 5 retries.
+            var exponentialRetryPolicy = new TableRequestOptions()
+            {
+                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(3), 5),
+            };
+
             try
             {
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
+                var storageAccount = CloudStorageAccount.Parse(connectionString);
                 this.cloudTableClient = storageAccount.CreateCloudTableClient();
+                this.cloudTableClient.DefaultRequestOptions = exponentialRetryPolicy;
                 this.cloudTable = this.cloudTableClient.GetTableReference(TableName);
                 await this.cloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
             }

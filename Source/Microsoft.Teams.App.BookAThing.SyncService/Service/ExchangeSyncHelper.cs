@@ -97,14 +97,14 @@ namespace Microsoft.Teams.Apps.BookAThing.SyncService.Service
         /// <returns>A task that represents the work queued to execute.</returns>
         public async Task ExchangeToStorageExportAsync()
         {
-            // 1. Get list of buildings from graph api.
+            // 1. Get list of buildings from Microsoft Graph API.
             // 2. Create batch of 10 buildings. (Useful for parallel execution)
-            // 3. For every building in batch:
+            // 3. For every building in batch do:
             //    - Get records from table storage matching building email id.
-            //    - Get rooms from graph api associated with building email id.
-            //    - Delete existing records from table storage matching building email id.
-            //    - Add records fetched from graph api to table storage.
-            //    - Find out deleted rooms from exchange and remove them from user favorites.
+            //    - Get rooms from Microsoft Graph API associated with building email id.
+            //    - Check which rooms got deleted by comparing rooms from Azure table storage and rooms Microsoft Graph API
+            //          - Set IsDeleted flag to true in RoomCollection table for rooms which got deleted.
+            //    - Update or insert rooms received from Microsoft Graph API in RoomCollection table.
             this.telemetryClient.TrackTrace("Exchange sync started");
 
             string token = await this.GetApplicationAccessTokenAsync().ConfigureAwait(false);
@@ -187,16 +187,22 @@ namespace Microsoft.Teams.Apps.BookAThing.SyncService.Service
                 if (roomsFromStorage?.Count > 0)
                 {
                     this.telemetryClient.TrackTrace($"Exchange sync - Building {building.DisplayName}, deleting rooms from storage");
-                    await this.roomCollectionStorageProvider.DeleteAsync(roomsFromStorage).ConfigureAwait(false);
+
+                    // Get room email IDs which got removed from Microsoft Exchange.
+                    var roomsToRemoveEmails = roomsFromStorage.Select(room => room.RowKey).Except(rooms.PlaceDetails.Select(room => room.EmailAddress));
+                    var roomsToRemove = roomsFromStorage.Where(room => roomsToRemoveEmails.Contains(room.RowKey)).ToList();
+
+                    // Set isDeleted flag to true for entity received from Azure table storage.
+                    roomsToRemove.ForEach(room => room.IsDeleted = true);
+
+                    // Update deleted rooms.
+                    await this.roomCollectionStorageProvider.UpdateDeletedRoomsAsync(roomsToRemove).ConfigureAwait(false);
                 }
 
-                // Add new rooms to storage.
-                var allRooms = await this.AddRoomsToStorageAsync(building, rooms?.PlaceDetails).ConfigureAwait(false);
+                // Add or update rooms received from Microsoft Exchange.
+                var allRooms = await this.AddOrReplaceRoomsAsync(building, rooms?.PlaceDetails).ConfigureAwait(false);
 
                 this.telemetryClient.TrackTrace($"Exchange Sync - Building {building.DisplayName}, deleting rooms from user favorites");
-
-                // Remove deleted rooms from user favourites.
-                await this.RemoveFromFavoritesAsync(roomsFromStorage, allRooms, building.EmailAddress).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
 
@@ -206,53 +212,28 @@ namespace Microsoft.Teams.Apps.BookAThing.SyncService.Service
         /// <param name="building">Building information.</param>
         /// <param name="rooms">List of rooms.</param>
         /// <returns>A task that represents the work queued to execute.</returns>
-        private async Task<List<MeetingRoomEntity>> AddRoomsToStorageAsync(PlaceInfo building, List<PlaceInfo> rooms)
+        private async Task<List<MeetingRoomEntity>> AddOrReplaceRoomsAsync(PlaceInfo building, List<PlaceInfo> rooms)
         {
+            var meetingRooms = new List<MeetingRoomEntity>();
             if (rooms != null)
             {
-                var meetingRooms = rooms.Select(room => new MeetingRoomEntity
+                meetingRooms = rooms.Select(room => new MeetingRoomEntity
                 {
                     BuildingName = building.DisplayName,
                     Key = room.Id,
                     BuildingEmail = building.EmailAddress,
                     RoomName = room.DisplayName,
                     RoomEmail = room.EmailAddress,
+                    IsDeleted = false,
                 }).ToList();
 
-                if (await this.roomCollectionStorageProvider.AddAsync(meetingRooms).ConfigureAwait(false))
+                if (await this.roomCollectionStorageProvider.AddOrReplaceAsync(meetingRooms).ConfigureAwait(false))
                 {
                     return meetingRooms;
                 }
             }
 
-            return default;
-        }
-
-        /// <summary>
-        /// Remove rooms from user favorites which are deleted from exchange.
-        /// </summary>
-        /// <param name="roomsFromStorage">List of rooms from storage.</param>
-        /// <param name="allrooms">List of rooms from exchange.</param>
-        /// <param name="buildingEmail">Building email.</param>
-        /// <returns>A task that represents the work queued to execute.</returns>
-        private async Task RemoveFromFavoritesAsync(IList<MeetingRoomEntity> roomsFromStorage, List<MeetingRoomEntity> allrooms, string buildingEmail)
-        {
-            List<string> roomsToRemove = new List<string>();
-
-            if (allrooms != null)
-            {
-                // Get rooms which got deleted from graph api.
-                roomsToRemove = roomsFromStorage.Select(room => room.RowKey).Except(allrooms.Select(room => room.RowKey)).ToList();
-            }
-            else
-            {
-                roomsToRemove = roomsFromStorage.Select(room => room.RowKey).ToList();
-            }
-
-            if (roomsToRemove.Count > 0 && buildingEmail != null)
-            {
-                await this.favoriteStorageProvider.DeleteAsync(roomsToRemove, buildingEmail).ConfigureAwait(false);
-            }
+            return meetingRooms;
         }
 
         /// <summary>

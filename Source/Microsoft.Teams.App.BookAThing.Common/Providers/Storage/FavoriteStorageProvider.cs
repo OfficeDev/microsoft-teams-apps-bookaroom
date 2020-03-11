@@ -9,8 +9,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
+    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Teams.Apps.BookAThing.Common.Models.TableEntities;
     using Microsoft.WindowsAzure.Storage;
+    using Microsoft.WindowsAzure.Storage.RetryPolicies;
     using Microsoft.WindowsAzure.Storage.Table;
 
     /// <summary>
@@ -98,7 +100,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
                 }
 
                 TableContinuationToken continuationToken = null;
-                List<UserFavoriteRoomEntity> rooms = new List<UserFavoriteRoomEntity>();
+                var rooms = new List<UserFavoriteRoomEntity>();
 
                 do
                 {
@@ -118,41 +120,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Delete favorites rooms associated with a building.
-        /// </summary>
-        /// <param name="roomEmails">Room emails.</param>
-        /// <param name="buildingEmail">Building email.</param>
-        /// <returns>Boolean indicating operation result.</returns>
-        public async Task<bool> DeleteAsync(IList<string> roomEmails, string buildingEmail)
-        {
-            try
-            {
-                await this.EnsureInitializedAsync().ConfigureAwait(false);
-                string buildingEmailCondition = TableQuery.GenerateFilterCondition(BuildingEmailColumnName, QueryComparisons.Equal, buildingEmail);
-                TableQuery<UserFavoriteRoomEntity> query = new TableQuery<UserFavoriteRoomEntity>().Where(buildingEmailCondition);
-                TableContinuationToken continuationToken = null;
-                List<UserFavoriteRoomEntity> rooms = new List<UserFavoriteRoomEntity>();
-
-                do
-                {
-                    var queryResult = await this.cloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
-                    rooms.AddRange(queryResult?.Results);
-                    continuationToken = queryResult?.ContinuationToken;
-                }
-                while (continuationToken != null);
-
-                var filteredRooms = rooms.Where(room => roomEmails.Contains(room.RowKey)).ToList();
-                TableBatchOperation deleteBatchOperation = new TableBatchOperation();
-                return await this.ExecuteBatchOperation(BatchOperation.Delete, rooms);
-            }
-            catch (Exception ex)
-            {
-                this.telemetryClient.TrackException(ex);
-                throw;
-            }
-        }
-
-        /// <summary>
         /// Add room to user favorite.
         /// </summary>
         /// <param name="room">Room entity object.</param>
@@ -162,7 +129,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
             try
             {
                 await this.EnsureInitializedAsync();
-                TableOperation insertOrMergeOperation = TableOperation.InsertOrReplace(room);
+                var insertOrMergeOperation = TableOperation.InsertOrReplace(room);
                 await this.cloudTable.ExecuteAsync(insertOrMergeOperation).ConfigureAwait(false);
                 return await this.GetAsync(room.PartitionKey).ConfigureAwait(false);
             }
@@ -177,14 +144,13 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         /// Adds rooms to favorite for user.
         /// </summary>
         /// <param name="rooms">List of favorite rooms.</param>
-        /// <returns>Boolean indicating operation result.</returns>
+        /// <returns>Returns true if batch operation for inserting favorite rooms for user succeeds.</returns>
         public async Task<bool> AddBatchAsync(IList<UserFavoriteRoomEntity> rooms)
         {
             try
             {
                 await this.EnsureInitializedAsync();
-                TableBatchOperation insertBatchOperation = new TableBatchOperation();
-                return await this.ExecuteBatchOperation(BatchOperation.Insert, rooms);
+                return await this.ExecuteBatchOperationAsync(BatchOperation.Insert, rooms).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -197,18 +163,17 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         /// Removes all favorite rooms of user.
         /// </summary>
         /// <param name="userObjectIdentifier">Active Directory object id of user.</param>
-        /// <returns>Boolean indicating operation result.</returns>
+        /// <returns>Returns true if batch operation for deleting favorite rooms of user succeeds.</returns>
         public async Task<bool> DeleteAllAsync(string userObjectIdentifier)
         {
             try
             {
                 await this.EnsureInitializedAsync();
-                var results = await this.GetAsync(userObjectIdentifier).ConfigureAwait(false);
+                var favoriteRooms = await this.GetAsync(userObjectIdentifier).ConfigureAwait(false);
 
-                if (results?.Count > 0)
+                if (favoriteRooms?.Count > 0)
                 {
-                    TableBatchOperation deleteBatch = new TableBatchOperation();
-                    return await this.ExecuteBatchOperation(BatchOperation.Delete, results);
+                    return await this.ExecuteBatchOperationAsync(BatchOperation.Delete, favoriteRooms).ConfigureAwait(false);
                 }
 
                 return true;
@@ -221,34 +186,34 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Executes batch add or delete operation on table.
+        /// Executes batch add or delete operation on Azure table storage.
         /// </summary>
         /// <param name="batchOperation">Batch operation to be performed.</param>
         /// <param name="rooms">List of rooms.</param>
-        /// <returns>Boolean indicating operation result.</returns>
-        private async Task<bool> ExecuteBatchOperation(BatchOperation batchOperation, IList<UserFavoriteRoomEntity> rooms)
+        /// <returns>Returns true if batch operation is successful else throws exception for error.</returns>
+        private async Task<bool> ExecuteBatchOperationAsync(BatchOperation batchOperation, IList<UserFavoriteRoomEntity> rooms)
         {
+            var tableBatchOperation = new TableBatchOperation();
             try
             {
-                TableBatchOperation tableBatchOperation = new TableBatchOperation();
-                int count = (int)Math.Ceiling((double)rooms.Count / RoomsPerBatch);
+                int batchCount = (int)Math.Ceiling((double)rooms.Count / RoomsPerBatch);
 
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < batchCount; i++)
                 {
+                    tableBatchOperation.Clear();
                     var roomsBatch = rooms.Skip(i * RoomsPerBatch).Take(RoomsPerBatch);
                     foreach (var room in roomsBatch)
                     {
                         tableBatchOperation.Add(batchOperation == BatchOperation.Insert ? TableOperation.Insert(room) : TableOperation.Delete(room));
                     }
+
+                    if (tableBatchOperation.Count > 0)
+                    {
+                        await this.cloudTable.ExecuteBatchAsync(tableBatchOperation).ConfigureAwait(false);
+                    }
                 }
 
-                if (tableBatchOperation.Count > 0)
-                {
-                    var result = await this.cloudTable.ExecuteBatchAsync(tableBatchOperation).ConfigureAwait(false);
-                    return result?.Count > 0;
-                }
-
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -267,16 +232,23 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         }
 
         /// <summary>
-        /// Create tables if it doesn't exists.
+        /// Create Azure storage table if it doesn't exists.
         /// </summary>
-        /// <param name="connectionString">storage account connection string.</param>
+        /// <param name="connectionString">Storage account connection string.</param>
         /// <returns>A task that represents the work queued to execute.</returns>
         private async Task InitializeAsync(string connectionString)
         {
+            // Exponential retry policy with backoff of 3 seconds and 5 retries.
+            var exponentialRetryPolicy = new TableRequestOptions()
+            {
+                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(3), 5),
+            };
+
             try
             {
-                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
+                var storageAccount = CloudStorageAccount.Parse(connectionString);
                 this.cloudTableClient = storageAccount.CreateCloudTableClient();
+                this.cloudTableClient.DefaultRequestOptions = exponentialRetryPolicy;
                 this.cloudTable = this.cloudTableClient.GetTableReference(TableName);
                 await this.cloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
             }

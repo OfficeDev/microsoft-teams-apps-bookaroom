@@ -18,6 +18,7 @@ namespace Microsoft.Teams.Apps.BookAThing
     using Microsoft.Bot.Builder.Integration.AspNet.Core;
     using Microsoft.Bot.Connector;
     using Microsoft.Bot.Connector.Authentication;
+    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.IdentityModel.Tokens;
     using Microsoft.Teams.Apps.BookAThing.Bots;
@@ -106,6 +107,8 @@ namespace Microsoft.Teams.Apps.BookAThing
             services.AddSingleton<IMeetingProvider, MeetingProvider>();
             services.AddSingleton<IUserConfigurationProvider, UserConfigurationProvider>();
 
+            services.AddSingleton<MemoryCache>();
+
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
 
@@ -122,7 +125,8 @@ namespace Microsoft.Teams.Apps.BookAThing
                 (IUserConfigurationStorageProvider)provider.GetService(typeof(IUserConfigurationStorageProvider)),
                 this.Configuration["AppBaseUri"],
                 this.Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"],
-                this.Configuration["TenantId"]));
+                this.Configuration["TenantId"],
+                (IMeetingHelper)provider.GetService(typeof(IMeetingHelper))));
         }
 
         /// <summary>

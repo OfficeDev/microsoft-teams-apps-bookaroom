@@ -18,7 +18,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         /// </summary>
         /// <param name="rooms">List of rooms.</param>
         /// <returns>Boolean indicating operation result.</returns>
-        Task<bool> AddAsync(IList<MeetingRoomEntity> rooms);
+        Task<bool> AddOrReplaceAsync(IList<MeetingRoomEntity> rooms);
 
         /// <summary>
         /// Delete all rooms associated to a building.
@@ -46,5 +46,12 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         /// <param name="roomCount">Number of rooms to be fetched.</param>
         /// <returns>List of meeting rooms.</returns>
         Task<IList<MeetingRoomEntity>> GetNRoomsAsync(int roomCount);
+
+        /// <summary>
+        /// Update rooms in Azure table storage as per change in Microsoft Exchange.
+        /// </summary>
+        /// <param name="rooms">List of rooms which got deleted from Exchange.</param>
+        /// <returns>Returns true if batch operation for updating rooms succeeds.</returns>
+        Task<bool> UpdateDeletedRoomsAsync(IList<MeetingRoomEntity> rooms);
     }
 }

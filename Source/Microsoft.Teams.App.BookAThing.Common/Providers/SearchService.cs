@@ -123,9 +123,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Common
                 {
                     OrderBy = new[] { "search.score() desc" },
                     Top = DefaultSearchResultCount,
+                    Filter = "IsDeleted eq false",
                 };
 
-                var documentSearchResult = await this.searchIndexClient.Documents.SearchAsync<MeetingRoomEntity>(searchQuery + "*").ConfigureAwait(false);
+                var documentSearchResult = await this.searchIndexClient.Documents.SearchAsync<MeetingRoomEntity>(searchQuery + "*", searchParam).ConfigureAwait(false);
                 if (documentSearchResult != null)
                 {
                     foreach (SearchResult<MeetingRoomEntity> searchResult in documentSearchResult.Results)

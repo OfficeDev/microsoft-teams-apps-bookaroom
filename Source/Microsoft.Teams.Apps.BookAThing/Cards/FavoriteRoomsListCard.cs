@@ -58,12 +58,25 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
             ListItem room = new ListItem();
             Meeting meeting;
 
-            if (rooms.Schedules.Count > 0)
+            if (rooms?.Schedules.Count > 0)
             {
                 foreach (var item in rooms.Schedules)
                 {
-                    var availability = item.ScheduleItems.Count > 0 ? Strings.Unavailable : Strings.Available;
-                    var availabilityColor = item.ScheduleItems.Count > 0 ? RedColorCode : GreenColorCode;
+                    string availability;
+                    string availabilityColor;
+
+                    // Schedule will be null in case room is deleted from exchange but sync service still gets room from Graph API as Graph takes time to reflect deleted item.
+                    if (item.ScheduleItems != null && item.ScheduleItems.Count == 0)
+                    {
+                        availability = Strings.Available;
+                        availabilityColor = GreenColorCode;
+                    }
+                    else
+                    {
+                        availability = Strings.Unavailable;
+                        availabilityColor = RedColorCode;
+                    }
+
                     var subtitle = string.Format(CultureInfo.CurrentCulture, "{0}&nbsp;|&nbsp;<b><font color='{1}'>{2}</font></b>", item.BuildingName, availabilityColor, availability);
 
                     meeting = new Meeting
@@ -83,7 +96,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                         Title = item.RoomName,
                         Subtitle = subtitle,
                         Type = "person",
-                        Tap = new CardAction { Type = ActionTypes.MessageBack, Title = BotCommands.CreateMeeting, Value = JsonConvert.SerializeObject(meeting) },
+                        Tap = new CardAction { Type = ActionTypes.MessageBack, Text = BotCommands.CreateMeeting, Title = BotCommands.CreateMeeting, Value = JsonConvert.SerializeObject(meeting) },
                     });
                 }
             }
