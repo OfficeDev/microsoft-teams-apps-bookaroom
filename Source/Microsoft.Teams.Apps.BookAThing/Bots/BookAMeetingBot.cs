@@ -100,6 +100,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         private readonly IUserConfigurationStorageProvider userConfigurationStorageProvider;
 
         /// <summary>
+        /// Helper class which exposes methods required for meeting creation.
+        /// </summary>
+        private readonly IMeetingHelper meetingHelper;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BookAMeetingBot{T}"/> class.
         /// </summary>
         /// <param name="conversationState">Reads and writes conversation state for your bot to storage.</param>
@@ -114,7 +119,8 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         /// <param name="appBaseUri">Application base URL.</param>
         /// <param name="instrumentationKey">Instrumentation key for application insights logging.</param>
         /// <param name="tenantId">Valid tenant id for which bot will operate.</param>
-        public BookAMeetingBot(ConversationState conversationState, UserState userState, T dialog, ITokenHelper tokenHelper, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, IMeetingProvider meetingProvider, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider, string appBaseUri, string instrumentationKey, string tenantId)
+        /// <param name="meetingHelper">Helper class which exposes methods required for meeting creation.</param>
+        public BookAMeetingBot(ConversationState conversationState, UserState userState, T dialog, ITokenHelper tokenHelper, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, IMeetingProvider meetingProvider, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider, string appBaseUri, string instrumentationKey, string tenantId, IMeetingHelper meetingHelper)
         {
             this.conversationState = conversationState;
             this.userState = userState;
@@ -128,6 +134,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
             this.appBaseUri = appBaseUri;
             this.instrumentationKey = instrumentationKey;
             this.tenantId = tenantId;
+            this.meetingHelper = meetingHelper;
         }
 
         /// <summary>
@@ -415,6 +422,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
             }
 
             var rooms = await this.favoriteStorageProvider.GetAsync(activity.From.AadObjectId).ConfigureAwait(false);
+            rooms = await this.meetingHelper.FilterFavoriteRoomsAsync(rooms?.ToList());
             var startUTCTime = DateTime.UtcNow.AddMinutes(Constants.DurationGapFromNow.Minutes);
             var startTime = TimeZoneInfo.ConvertTimeFromUtc(startUTCTime, TimeZoneInfo.FindSystemTimeZoneById(userConfiguration.WindowsTimezone));
             var endTime = startTime.AddMinutes(Constants.DefaultMeetingDuration.Minutes);

@@ -9,7 +9,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
-
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
@@ -39,6 +38,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// Number of rooms to load in dropdown initially.
         /// </summary>
         private const int InitialRoomCount = 5;
+
+        /// <summary>
+        /// Unauthorized error message response in case of user sign in failure.
+        /// </summary>
+        private const string SignInErrorCode = "signinRequired";
 
         /// <summary>
         /// Search service for searching room/building as per user input.
@@ -79,11 +83,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// Provider to get user specific data from Graph API.
         /// </summary>
         private readonly IUserConfigurationProvider userConfigurationProvider;
-
-        /// <summary>
-        /// Unauthorized error message response in case of user sign in failure.
-        /// </summary>
-        private const string SignInErrorCode = "signinRequired";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MeetingApiController"/> class.
@@ -157,6 +156,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveTimeZoneAsync([FromBody]UserConfigurationEntity configuration)
         {
+            if (configuration == null)
+            {
+                return this.BadRequest(new { message = "Configuration details parameter is null." });
+            }
+
             try
             {
                 var claims = this.GetUserClaims();
@@ -223,6 +227,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                 }
 
                 var userFavoriteRooms = await this.favoriteStorageProvider.GetAsync(claims.UserObjectIdentifer).ConfigureAwait(false);
+                userFavoriteRooms = await this.meetingHelper.FilterFavoriteRoomsAsync(userFavoriteRooms?.ToList()).ConfigureAwait(false);
                 return this.Ok(userFavoriteRooms);
             }
             catch (Exception ex)
@@ -237,8 +242,15 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// </summary>
         /// <param name="search">Schedule object.</param>
         /// <returns>Returns list of rooms.</returns>
+        [HttpPost]
         public async Task<IActionResult> SearchRoomAsync([FromBody]ScheduleSearch search)
         {
+            var searchedRooms = new List<SearchResult>();
+            if (search == null)
+            {
+                return this.BadRequest(new { message = "Search details parameter is null." });
+            }
+
             try
             {
                 var claims = this.GetUserClaims();
@@ -263,41 +275,45 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                     return this.StatusCode(StatusCodes.Status500InternalServerError);
                 }
 
-                if (search.IsScheduleRequired)
+                if (searchServiceResults.Count > 0)
                 {
-                    var conversionResult = DateTime.TryParse(search.Time, out DateTime localTime);
-                    var startUTCDateTime = localTime.AddMinutes(Constants.DurationGapFromNow.Minutes);
-                    var startDateTime = TimeZoneInfo.ConvertTimeFromUtc(startUTCDateTime, TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(search.TimeZone)));
-                    search.Time = startDateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                    var rooms = searchServiceResults.Select(room => room.RowKey).ToList();
-                    var scheduleResponse = await this.meetingHelper.GetRoomScheduleAsync(search, rooms, token).ConfigureAwait(false);
-
-                    if (scheduleResponse.ErrorResponse != null)
+                    if (search.IsScheduleRequired)
                     {
-                        return this.StatusCode((int)scheduleResponse.StatusCode, scheduleResponse.ErrorResponse.Error.ErrorMessage);
+                        var conversionResult = DateTime.TryParse(search.Time, out DateTime localTime);
+                        var startUTCDateTime = localTime.AddMinutes(Constants.DurationGapFromNow.Minutes);
+                        var startDateTime = TimeZoneInfo.ConvertTimeFromUtc(startUTCDateTime, TimeZoneInfo.FindSystemTimeZoneById(TZConvert.IanaToWindows(search.TimeZone)));
+                        search.Time = startDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+                        var rooms = searchServiceResults.Select(room => room.RowKey).ToList();
+                        var scheduleResponse = await this.meetingHelper.GetRoomScheduleAsync(search, rooms, token).ConfigureAwait(false);
+
+                        if (scheduleResponse.ErrorResponse != null)
+                        {
+                            return this.StatusCode((int)scheduleResponse.StatusCode, scheduleResponse.ErrorResponse.Error.ErrorMessage);
+                        }
+
+                        searchedRooms = searchServiceResults.Select(searchResult => new SearchResult(searchResult)
+                        {
+                            Label = searchResult.RoomName,
+                            Value = searchResult.RowKey,
+                            Sublabel = searchResult.BuildingName,
+                            Status = scheduleResponse?.Schedules.Where(schedule => schedule.ScheduleId == searchResult.RowKey).FirstOrDefault()?.ScheduleItems == null
+                                        || scheduleResponse?.Schedules.Where(schedule => schedule.ScheduleId == searchResult.RowKey).FirstOrDefault()?.ScheduleItems?.Count > 0
+                                        ? Strings.Unavailable
+                                        : Strings.Available,
+                        }).ToList();
                     }
-
-                    var searchedRooms = searchServiceResults.Select(searchResult => new SearchResult(searchResult)
+                    else
                     {
-                        Label = searchResult.RoomName,
-                        Value = searchResult.RowKey,
-                        Sublabel = searchResult.BuildingName,
-                        Status = scheduleResponse.Schedules.Where(schedule => schedule.ScheduleId == searchResult.RowKey).FirstOrDefault()?.ScheduleItems?.Count > 0 ? Strings.Unavailable : Strings.Available,
-                    }).ToList();
-
-                    return this.Ok(searchedRooms);
+                        searchedRooms = searchServiceResults.Select(searchResult => new SearchResult(searchResult)
+                        {
+                            Label = searchResult.RoomName,
+                            Value = searchResult.RowKey,
+                            Sublabel = searchResult.BuildingName,
+                        }).ToList();
+                    }
                 }
-                else
-                {
-                    var searchedRooms = searchServiceResults.Select(searchResult => new SearchResult(searchResult)
-                    {
-                        Label = searchResult.RoomName,
-                        Value = searchResult.RowKey,
-                        Sublabel = searchResult.BuildingName,
-                    }).ToList();
 
-                    return this.Ok(searchedRooms);
-                }
+                return this.Ok(searchedRooms);
             }
             catch (Exception ex)
             {
@@ -311,8 +327,14 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         /// </summary>
         /// <param name="search">Schedule search object.</param>
         /// <returns>Returns list of rooms.</returns>
+        [HttpPost]
         public async Task<IActionResult> TopNRoomsAsync([FromBody]ScheduleSearch search)
         {
+            if (search == null)
+            {
+                return this.BadRequest(new { message = "Search details parameter is null." });
+            }
+
             try
             {
                 var claims = this.GetUserClaims();
@@ -355,7 +377,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
                         Label = searchResult.RoomName,
                         Value = searchResult.RowKey,
                         Sublabel = searchResult.BuildingName,
-                        Status = scheduleResponse?.Schedules.Where(schedule => schedule.ScheduleId == searchResult.RowKey).FirstOrDefault()?.ScheduleItems?.Count > 0 ? Strings.Unavailable : Strings.Available,
+                        Status = scheduleResponse?.Schedules.Where(schedule => schedule.ScheduleId == searchResult.RowKey).FirstOrDefault()?.ScheduleItems == null
+                                    || scheduleResponse?.Schedules.Where(schedule => schedule.ScheduleId == searchResult.RowKey).FirstOrDefault()?.ScheduleItems?.Count > 0
+                                    ? Strings.Unavailable
+                                    : Strings.Available,
                     }).ToList();
 
                     return this.Ok(searchResults);
@@ -387,6 +412,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         [HttpPost]
         public async Task<IActionResult> SubmitFavoritesAsync([FromBody]IList<UserFavoriteRoomEntity> rooms)
         {
+            if (rooms == null)
+            {
+                return this.BadRequest(new { message = "Rooms details parameter is null." });
+            }
+
             try
             {
                 var claims = this.GetUserClaims();
@@ -432,6 +462,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Controllers
         [HttpPost]
         public async Task<ActionResult<CreateEventResponse>> CreateMeetingAsync([FromBody]CreateEvent meeting)
         {
+            if (meeting == null)
+            {
+                return this.BadRequest(new { message = "Meeting details parameter is null." });
+            }
+
             try
             {
                 var claims = this.GetUserClaims();

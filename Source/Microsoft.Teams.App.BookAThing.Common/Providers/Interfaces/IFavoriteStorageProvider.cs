@@ -35,14 +35,6 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage
         Task<bool> DeleteAllAsync(string userIdentifier);
 
         /// <summary>
-        /// Delete favorites rooms added of building.
-        /// </summary>
-        /// <param name="roomEmails">List of room email.</param>
-        /// <param name="buildingEmail">Building email.</param>
-        /// <returns>Boolean indicating operation result.</returns>
-        Task<bool> DeleteAsync(IList<string> roomEmails, string buildingEmail);
-
-        /// <summary>
         /// Get user favorite rooms.
         /// </summary>
         /// <param name="userIdentifier">User object identifier.</param>

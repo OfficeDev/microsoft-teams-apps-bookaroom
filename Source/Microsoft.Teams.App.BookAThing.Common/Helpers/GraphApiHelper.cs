@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Helpers
 {
     using System.Collections.Generic;
     using System.Net.Http;
+    using System.Net.Http.Headers;
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
@@ -46,9 +47,12 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Helpers
         /// <returns>API response instance for GET request.</returns>
         public async Task<HttpResponseMessage> GetAsync(string url, string token, Dictionary<string, string> headers = null)
         {
-            using (var client = this.CreateClient(headers, token))
+            using (var client = this.clientFactory.CreateClient("GraphApiHelper"))
             {
-                return await client.GetAsync(url).ConfigureAwait(false);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                return await client.SendAsync(request).ConfigureAwait(false);
             }
         }
 
@@ -63,41 +67,19 @@ namespace Microsoft.Teams.Apps.BookAThing.Common.Helpers
         /// <returns>API response instance for POST request.</returns>
         public async Task<HttpResponseMessage> PostAsync(string url, string token, string payload = "", Dictionary<string, string> headers = null)
         {
-            HttpContent contentPost = null;
-            using (var client = this.CreateClient(headers, token))
+            using (var client = this.clientFactory.CreateClient("GraphApiHelper"))
             {
+                var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
                 if (!string.IsNullOrEmpty(payload))
                 {
-                    var content = new StringContent(payload, Encoding.UTF8, "application/json");
-                    contentPost = content;
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
                 }
 
-                return await client.PostAsync(url, contentPost).ConfigureAwait(false);
+                return await client.SendAsync(request).ConfigureAwait(false);
             }
-        }
-
-        /// <summary>
-        /// Set headers and authentication token for HTTP request.
-        /// </summary>
-        /// <param name="headers">Header parameters.</param>
-        /// <param name="token">Authentication token.</param>
-        private HttpClient CreateClient(Dictionary<string, string> headers, string token)
-        {
-            var client = this.clientFactory.CreateClient("GraphApiHelper");
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-            if (headers != null)
-            {
-                foreach (var header in headers)
-                {
-                    if (!string.IsNullOrEmpty(header.Value))
-                    {
-                        client.DefaultRequestHeaders.Add(header.Key, header.Value);
-                    }
-                }
-            }
-
-            return client;
         }
     }
 }

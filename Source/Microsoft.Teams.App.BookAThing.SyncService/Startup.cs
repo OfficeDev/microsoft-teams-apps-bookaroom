@@ -13,6 +13,7 @@ namespace Microsoft.Teams.App.BookAThing.SyncService
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.Azure.WebJobs;
+    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Identity.Client;
     using Microsoft.Teams.Apps.BookAThing.Common;
