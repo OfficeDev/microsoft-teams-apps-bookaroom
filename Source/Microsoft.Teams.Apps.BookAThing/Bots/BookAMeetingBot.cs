@@ -398,9 +398,17 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         /// <returns>A task that represents the work queued to execute.</returns>
         private static Task SendTypingIndicatorAsync(ITurnContext turnContext)
         {
-            var typingActivity = turnContext.Activity.CreateReply();
-            typingActivity.Type = ActivityTypes.Typing;
-            return turnContext.SendActivityAsync(typingActivity);
+            try
+            {
+                var typingActivity = turnContext.Activity.CreateReply();
+                typingActivity.Type = ActivityTypes.Typing;
+                await turnContext.SendActivityAsync(typingActivity);
+            }
+            catch (Exception ex)
+            {
+                // Do not fail on errors sending the typing indicator
+                this.logger.LogWarning(ex, "Failed to send a typing indicator");
+            }
         }
 
         /// <summary>
