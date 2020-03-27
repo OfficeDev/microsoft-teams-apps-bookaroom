@@ -358,7 +358,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             var command = turnContext.Activity.Text;
-            await SendTypingIndicatorAsync(turnContext).ConfigureAwait(false);
+            await this.SendTypingIndicatorAsync(turnContext).ConfigureAwait(false);
 
             if (turnContext.Activity.Text == null && turnContext.Activity.Value != null && turnContext.Activity.Type == ActivityTypes.Message)
             {
@@ -396,7 +396,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         /// </summary>
         /// <param name="turnContext">Context object containing information cached for a single turn of conversation with a user.</param>
         /// <returns>A task that represents the work queued to execute.</returns>
-        private static Task SendTypingIndicatorAsync(ITurnContext turnContext)
+        private async Task SendTypingIndicatorAsync(ITurnContext turnContext)
         {
             try
             {
@@ -407,7 +407,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
             catch (Exception ex)
             {
                 // Do not fail on errors sending the typing indicator
-                this.logger.LogWarning(ex, "Failed to send a typing indicator");
+                this.telemetryClient.TrackTrace($"{ex} Failed to send a typing indicator");
             }
         }
 
