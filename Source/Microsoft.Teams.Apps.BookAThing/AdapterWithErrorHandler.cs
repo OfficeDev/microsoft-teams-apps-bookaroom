@@ -8,6 +8,7 @@ namespace Microsoft.Teams.Apps.BookAThing
     using Microsoft.ApplicationInsights;
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Integration.AspNet.Core;
+    using Microsoft.Bot.Connector.Authentication;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Teams.Apps.BookAThing.Resources;
 
@@ -21,9 +22,11 @@ namespace Microsoft.Teams.Apps.BookAThing
         /// </summary>
         /// <param name="configuration">Application configuration.</param>
         /// <param name="telemetryClient">Telemetry client for logging events and errors.</param>
+        /// <param name="authConfig">The authentication configuration.</param>
+        /// <param name="credentialProvider">The credential provider.</param>
         /// <param name="conversationState">Reads and writes conversation state for your bot to storage.</param>
-        public AdapterWithErrorHandler(IConfiguration configuration, TelemetryClient telemetryClient, ConversationState conversationState = null)
-            : base(configuration)
+        public AdapterWithErrorHandler(IConfiguration configuration, TelemetryClient telemetryClient, AuthenticationConfiguration authConfig, ICredentialProvider credentialProvider = null, ConversationState conversationState = null)
+            : base(configuration, credentialProvider, authConfig)
         {
             this.OnTurnError = async (turnContext, exception) =>
             {

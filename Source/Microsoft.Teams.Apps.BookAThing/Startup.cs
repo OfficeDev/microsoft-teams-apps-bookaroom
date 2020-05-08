@@ -22,6 +22,7 @@ namespace Microsoft.Teams.Apps.BookAThing
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.IdentityModel.Tokens;
+    using Microsoft.Teams.Apps.BookAThing.Authentication;
     using Microsoft.Teams.Apps.BookAThing.Bots;
     using Microsoft.Teams.Apps.BookAThing.Common;
     using Microsoft.Teams.Apps.BookAThing.Common.Helpers;
@@ -89,6 +90,7 @@ namespace Microsoft.Teams.Apps.BookAThing
             services.AddSingleton(new OAuthClient(new MicrosoftAppCredentials(this.Configuration["MicrosoftAppId"], this.Configuration["MicrosoftAppPassword"])));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
             services.AddSingleton<ITokenHelper>(provider => new TokenHelper(this.Configuration["SecurityKey"], this.Configuration["AppBaseUri"], this.Configuration["ConnectionName"], (OAuthClient)provider.GetService(typeof(OAuthClient)), (TelemetryClient)provider.GetService(typeof(TelemetryClient))));
+            services.AddSingleton(provider => new AuthenticationConfiguration { ClaimsValidator = new AllowedCallersClaimsValidator(provider.GetService<IConfiguration>()) });
 
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
