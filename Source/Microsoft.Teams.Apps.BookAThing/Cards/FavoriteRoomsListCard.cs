@@ -10,6 +10,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
     using Microsoft.Bot.Schema;
     using Microsoft.Bot.Schema.Teams;
     using Microsoft.Teams.Apps.BookAThing.Common.Models.Response;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
     using Microsoft.Teams.Apps.BookAThing.Models;
     using Microsoft.Teams.Apps.BookAThing.Resources;
     using Newtonsoft.Json;
@@ -36,9 +37,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
         /// <param name="startUTCDateTime">Start date time of meeting.</param>
         /// <param name="endUTCDateTime">End date time of meeting.</param>
         /// <param name="timeZone">User time zone.</param>
+        /// <param name="appId"> Microsoft app id.</param>
         /// <param name="activityReferenceId">Unique GUID related to activity Id from ActivityEntities table.</param>
         /// <returns>List card attachment having favorite rooms of user.</returns>
-        public static Attachment GetFavoriteRoomsListAttachment(RoomScheduleResponse rooms, DateTime startUTCDateTime, DateTime endUTCDateTime, string timeZone, string activityReferenceId = null)
+        public static Attachment GetFavoriteRoomsListAttachment(RoomScheduleResponse rooms, DateTime startUTCDateTime, DateTime endUTCDateTime, string timeZone, string appId, string activityReferenceId = null)
         {
             ListCard card = new ListCard
             {
@@ -79,7 +81,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
 
                     var subtitle = string.Format(CultureInfo.CurrentCulture, "{0}&nbsp;|&nbsp;<b><font color='{1}'>{2}</font></b>", item.BuildingName, availabilityColor, availability);
 
-                    meeting = new Meeting
+                    meeting = new Meeting(appId)
                     {
                         EndDateTime = DateTime.SpecifyKind(endUTCDateTime, DateTimeKind.Utc).ToString("o"),
                         RoomEmail = item.ScheduleId,
@@ -110,10 +112,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
             }
 
             card.Items.Add(room);
-            CardAction addFavoriteButton = new TaskModuleAction(Strings.ManageFavorites, new { data = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction { Text = BotCommands.ShowFavoriteTaskModule, ActivityReferenceId = activityReferenceId }) });
+            CardAction addFavoriteButton = new TaskModuleAction(Strings.ManageFavorites, new AdaptiveTaskModuleCardAction(appId) { Text = BotCommands.ShowFavoriteTaskModule, ActivityReferenceId = activityReferenceId });
             card.Buttons.Add(addFavoriteButton);
 
-            CardAction otherRoomButton = new TaskModuleAction(Strings.OtherRooms, new { data = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction { Text = BotCommands.ShowOtherRoomsTaskModule, ActivityReferenceId = activityReferenceId }) });
+            CardAction otherRoomButton = new TaskModuleAction(Strings.OtherRooms, new AdaptiveTaskModuleCardAction(appId) { Text = BotCommands.ShowOtherRoomsTaskModule, ActivityReferenceId = activityReferenceId });
             card.Buttons.Add(otherRoomButton);
 
             if (rooms?.Schedules.Count > 0)
@@ -123,7 +125,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                     Title = Strings.Refresh,
                     Type = ActionTypes.MessageBack,
                     Text = BotCommands.RefreshList,
-                    Value = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction { Text = BotCommands.RefreshList, ActivityReferenceId = activityReferenceId }),
+                    Value = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction(appId) { Text = BotCommands.RefreshList, ActivityReferenceId = activityReferenceId }),
                 };
 
                 card.Buttons.Add(refreshListButton);

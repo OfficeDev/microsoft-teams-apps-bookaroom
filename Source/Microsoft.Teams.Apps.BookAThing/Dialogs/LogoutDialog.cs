@@ -11,6 +11,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
     using Microsoft.Bot.Builder;
     using Microsoft.Bot.Builder.Dialogs;
     using Microsoft.Bot.Schema;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
     using Microsoft.Teams.Apps.BookAThing.Resources;
 
     /// <summary>

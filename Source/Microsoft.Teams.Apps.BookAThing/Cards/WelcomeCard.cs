@@ -8,6 +8,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
     using System.Collections.Generic;
     using AdaptiveCards;
     using Microsoft.Bot.Schema;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
     using Microsoft.Teams.Apps.BookAThing.Models;
     using Microsoft.Teams.Apps.BookAThing.Resources;
 

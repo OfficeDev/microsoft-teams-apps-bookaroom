@@ -12,6 +12,15 @@ namespace Microsoft.Teams.Apps.BookAThing.Models
     public class MeetingViewModel : UserFavoriteRoomEntity
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="MeetingViewModel"/> class.
+        /// </summary>
+        /// <param name="skillId"> Microsoft app id to embed in card actions.</param>
+        public MeetingViewModel(string skillId)
+        {
+            this.SkillId = skillId;
+        }
+
+        /// <summary>
         /// Gets or sets bot command text.
         /// </summary>
         public string Text { get; set; }
@@ -65,5 +74,10 @@ namespace Microsoft.Teams.Apps.BookAThing.Models
         /// Gets or sets unique GUID to recognize previous activity which needs to be updated.
         /// </summary>
         public string ActivityReferenceId { get; set; }
+
+        /// <summary>
+        /// Gets or sets skillId.
+        /// </summary>
+        public string SkillId { get; set; }
     }
 }

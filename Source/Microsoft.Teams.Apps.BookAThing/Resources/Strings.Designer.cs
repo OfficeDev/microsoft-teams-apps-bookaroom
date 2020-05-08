@@ -223,6 +223,15 @@ namespace Microsoft.Teams.Apps.BookAThing.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sorry! I don&apos;t support group chats..
+        /// </summary>
+        public static string GroupChatNotSupportedMessage {
+            get {
+                return ResourceManager.GetString("GroupChatNotSupportedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You&apos;re not authorized to access this bot. Please contact your administrator for help..
         /// </summary>
         public static string InvalidTenant {

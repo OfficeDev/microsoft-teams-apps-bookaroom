@@ -353,4 +353,8 @@
     <value>I can only support below commands.</value>
     <comment>Text to be displayed in help card</comment>
   </data>
+  <data name="GroupChatNotSupportedMessage" xml:space="preserve">
+    <value>Sorry! I don't support group chats.</value>
+    <comment>Message shown to user when bot is invoked from teams channel or group chat.</comment>
+  </data>
 </root>

@@ -23,10 +23,13 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
     using Microsoft.Teams.Apps.BookAThing.Common.Models.TableEntities;
     using Microsoft.Teams.Apps.BookAThing.Common.Providers;
     using Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
+    using Microsoft.Teams.Apps.BookAThing.Extension;
     using Microsoft.Teams.Apps.BookAThing.Helpers;
     using Microsoft.Teams.Apps.BookAThing.Models;
     using Microsoft.Teams.Apps.BookAThing.Providers.Storage;
     using Microsoft.Teams.Apps.BookAThing.Resources;
+    using Microsoft.Teams.Apps.BookAThing.Services;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 
@@ -71,6 +74,16 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
         private readonly IMeetingHelper meetingHelper;
 
         /// <summary>
+        /// App configuration.
+        /// </summary>
+        private readonly IConfiguration configuration;
+
+        /// <summary>
+        /// Bot services for localized language model.
+        /// </summary>
+        private readonly BotServices botServices;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MainDialog"/> class.
         /// </summary>
         /// <param name="configuration">Application configuration.</param>
@@ -81,7 +94,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
         /// <param name="telemetryClient">Telemetry client for logging events and errors.</param>
         /// <param name="userConfigurationStorageProvider">Storage provider to perform fetch operation on UserConfiguration table.</param>
         /// <param name="meetingHelper">Helper class which exposes methods required for meeting creation.</param>
-        public MainDialog(IConfiguration configuration, IMeetingProvider meetingProvider, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, ITokenHelper tokenHelper, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider, IMeetingHelper meetingHelper)
+        public MainDialog(IConfiguration configuration, IMeetingProvider meetingProvider, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, ITokenHelper tokenHelper, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider, IMeetingHelper meetingHelper, BotServices botServices)
             : base(nameof(MainDialog), configuration["ConnectionName"], telemetryClient)
         {
             this.tokenHelper = tokenHelper;
@@ -91,6 +104,8 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
             this.userConfigurationStorageProvider = userConfigurationStorageProvider;
             this.meetingProvider = meetingProvider;
             this.meetingHelper = meetingHelper;
+            this.configuration = configuration;
+            this.botServices = botServices;
             this.AddDialog(new OAuthPrompt(
                  nameof(OAuthPrompt),
                  new OAuthPromptSettings
@@ -160,9 +175,34 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
             if (stepContext.Result != null)
             {
                 var tokenResponse = stepContext.Result as TokenResponse;
+
                 if (!string.IsNullOrEmpty(tokenResponse.Token))
                 {
                     var command = (string)stepContext.Values["command"] ?? string.Empty;
+
+                    stepContext.Context.Activity.Type = ActivityTypes.Message;
+
+                    // Get language model for the current locale.
+                    var localizedServices = this.botServices.GetLanguageModels();
+
+                    // Activity texts forwarded via VA may not contain exact bot command but NLP variants eg: "please book me a room".
+                    // Hence identify the intents than text matching for "BookAMeeting" and "ManageFavorites" commands.
+                    var intent = await localizedServices.RecognizeAsync(stepContext.Context, cancellationToken);
+                    (string topIntentText, double topIntentScore) = intent.GetTopIntentAndScore();
+                    double scoreThreshold = Convert.ToDouble(this.configuration["LuisScoreThreshold"], CultureInfo.InvariantCulture);
+
+                    if (topIntentScore > scoreThreshold)
+                    {
+                        if (topIntentText.Equals(Intents.BookARoom, StringComparison.OrdinalIgnoreCase))
+                        {
+                            command = BotCommands.BookAMeeting;
+                        }
+                        else if (topIntentText.Equals(Intents.ManageFavorites, StringComparison.OrdinalIgnoreCase))
+                        {
+                            command = BotCommands.ManageFavorites;
+                        }
+                    }
+
                     switch (command.ToUpperInvariant())
                     {
                         case BotCommands.BookAMeeting:
@@ -217,7 +257,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
         /// <returns>A task that represents the work queued to execute.</returns>
         private async Task ShowManageFavoritesCardAsync(WaterfallStepContext stepContext)
         {
-            var attachment = ManageFavoriteCard.GetManageFavoriteAttachment();
+            var attachment = ManageFavoriteCard.GetManageFavoriteAttachment(this.configuration["MicrosoftAppId"]);
             await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(attachment)).ConfigureAwait(false);
         }
 
@@ -230,7 +270,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
         {
             var reply = stepContext.Context.Activity.CreateReply();
             reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
-            reply.Attachments = HelpCard.GetHelpAttachments();
+            reply.Attachments = HelpCard.GetHelpAttachments(this.configuration["MicrosoftAppId"]);
             await stepContext.Context.SendActivityAsync(reply).ConfigureAwait(false);
         }
 
@@ -246,6 +286,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
             var activity = stepContext.Context.Activity;
             var startUTCTime = DateTime.UtcNow.AddMinutes(Constants.DurationGapFromNow.Minutes);
             var endUTCTime = startUTCTime.AddMinutes(Constants.DefaultMeetingDuration.Minutes);
+            var appId = this.configuration["MicrosoftAppId"];
 
             var userFavorites = await this.favoriteStorageProvider.GetAsync(activity.From.AadObjectId).ConfigureAwait(false);
 
@@ -295,7 +336,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
             if (refresh)
             {
                 var activityReferenceId = JObject.Parse(activity.Value.ToString()).SelectToken("activityReferenceId").ToString();
-                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(roomsScheduleResponse, startUTCTime, endUTCTime, userConfiguration?.WindowsTimezone, activityReferenceId);
+                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(roomsScheduleResponse, startUTCTime, endUTCTime, userConfiguration?.WindowsTimezone, appId, activityReferenceId);
                 var updateCardActivity = new Activity(ActivityTypes.Message)
                 {
                     Id = stepContext.Context.Activity.ReplyToId,
@@ -303,14 +344,14 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                     Attachments = new List<Attachment> { attachment },
                 };
 
-                var replyActivity = await stepContext.Context.UpdateActivityAsync(updateCardActivity).ConfigureAwait(false);
+                var replyActivity = await stepContext.Context.SendActivityAsync(updateCardActivity).ConfigureAwait(false);
                 Models.TableEntities.ActivityEntity newActivity = new Models.TableEntities.ActivityEntity { ActivityId = replyActivity.Id, PartitionKey = activity.From.AadObjectId, RowKey = activityReferenceId };
                 await this.activityStorageProvider.AddAsync(newActivity).ConfigureAwait(false);
             }
             else
             {
                 var activityReferenceId = Guid.NewGuid().ToString();
-                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(roomsScheduleResponse, startUTCTime, endUTCTime, userConfiguration?.WindowsTimezone, activityReferenceId);
+                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(roomsScheduleResponse, startUTCTime, endUTCTime, userConfiguration?.WindowsTimezone, appId, activityReferenceId);
                 var replyActivity = await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(attachment)).ConfigureAwait(false);
 
                 Models.TableEntities.ActivityEntity newActivity = new Models.TableEntities.ActivityEntity { ActivityId = replyActivity.Id, PartitionKey = activity.From.AadObjectId, RowKey = activityReferenceId };
@@ -394,7 +435,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                         Attachments = new List<Attachment> { CancellationCard.GetCancellationAttachment(selectedMeetingValues.RoomName, selectedMeetingValues.BuildingName, startUTCDateTime, endUTCDateTime, userConfiguration.WindowsTimezone) },
                     };
 
-                    await stepContext.Context.UpdateActivityAsync(updateCardActivity, cancellationToken).ConfigureAwait(false);
+                    await stepContext.Context.SendActivityAsync(updateCardActivity, cancellationToken).ConfigureAwait(false);
                     await stepContext.Context.SendActivityAsync(MessageFactory.Text(Strings.MeetingCancelled)).ConfigureAwait(false);
                 }
                 else
@@ -488,6 +529,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                             return;
                         }
 
+                        var appId = this.configuration["MicrosoftAppId"];
                         this.telemetryClient.TrackEvent("Meeting created", new Dictionary<string, string>() { { "User", activity.From.AadObjectId }, { "Room", selectedMeetingValues.RoomEmail } });
                         var updateCardActivity = new Activity(ActivityTypes.Message)
                         {
@@ -496,7 +538,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                             Attachments = new List<Attachment>
                                 {
                                     SuccessCard.GetSuccessAttachment(
-                                        new MeetingViewModel
+                                        new MeetingViewModel(appId)
                                         {
                                             MeetingId = meetingResponse.Id,
                                             RoomName = selectedMeetingValues.RoomName,
@@ -506,11 +548,12 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                                             EndDateTime = selectedMeetingValues.EndDateTime,
                                             IsFavourite = true,
                                         },
-                                        userConfiguration.WindowsTimezone),
+                                        userConfiguration.WindowsTimezone,
+                                        appId),
                                 },
                         };
 
-                        await stepContext.Context.UpdateActivityAsync(updateCardActivity, cancellationToken).ConfigureAwait(false);
+                        await stepContext.Context.SendActivityAsync(updateCardActivity, cancellationToken).ConfigureAwait(false);
                         await stepContext.Context.SendActivityAsync(MessageFactory.Text(string.Format(CultureInfo.CurrentCulture, Strings.RoomBooked, selectedMeetingValues.RoomName)), cancellationToken).ConfigureAwait(false);
                     }
                 }
@@ -531,6 +574,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
             var startUTCTime = DateTime.UtcNow.AddMinutes(Constants.DurationGapFromNow.Minutes);
             var endUTCTime = startUTCTime.AddMinutes(Constants.DefaultMeetingDuration.Minutes);
             var userConfiguration = await this.userConfigurationStorageProvider.GetAsync(activity.From.AadObjectId).ConfigureAwait(false);
+            var appId = this.configuration["MicrosoftAppId"];
 
             if (userConfiguration == null)
             {
@@ -560,7 +604,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                     room.BuildingName = searchedRoom.BuildingName;
                 }
 
-                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(roomsScheduleResponse, startUTCTime, endUTCTime, userConfiguration.WindowsTimezone, activityReferenceId);
+                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(roomsScheduleResponse, startUTCTime, endUTCTime, userConfiguration.WindowsTimezone, appId, activityReferenceId);
                 var updateCardActivity = new Activity(ActivityTypes.Message)
                 {
                     Id = stepContext.Context.Activity.ReplyToId,
@@ -568,14 +612,14 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                     Attachments = new List<Attachment> { attachment },
                 };
 
-                var replyActivity = await stepContext.Context.UpdateActivityAsync(updateCardActivity).ConfigureAwait(false);
+                var replyActivity = await stepContext.Context.SendActivityAsync(updateCardActivity).ConfigureAwait(false);
                 Models.TableEntities.ActivityEntity newActivity = new Models.TableEntities.ActivityEntity { ActivityId = replyActivity.Id, PartitionKey = activity.From.AadObjectId, RowKey = activityReferenceId };
                 await this.activityStorageProvider.AddAsync(newActivity).ConfigureAwait(false);
             }
             else
             {
                 RoomScheduleResponse scheduleResponse = new RoomScheduleResponse { Schedules = new List<Schedule>() };
-                var attchment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(scheduleResponse, startUTCTime, endUTCTime, userConfiguration.WindowsTimezone, activityReferenceId);
+                var attchment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(scheduleResponse, startUTCTime, endUTCTime, userConfiguration.WindowsTimezone, appId, activityReferenceId);
 
                 var updateCardActivity = new Activity(ActivityTypes.Message)
                 {
@@ -584,7 +628,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Dialogs
                     Attachments = new List<Attachment> { attchment },
                 };
 
-                var replyActivity = await stepContext.Context.UpdateActivityAsync(updateCardActivity).ConfigureAwait(false);
+                var replyActivity = await stepContext.Context.SendActivityAsync(updateCardActivity).ConfigureAwait(false);
                 Models.TableEntities.ActivityEntity newActivity = new Models.TableEntities.ActivityEntity { ActivityId = replyActivity.Id, PartitionKey = activity.From.AadObjectId, RowKey = activityReferenceId };
                 await this.activityStorageProvider.AddAsync(newActivity).ConfigureAwait(false);
             }

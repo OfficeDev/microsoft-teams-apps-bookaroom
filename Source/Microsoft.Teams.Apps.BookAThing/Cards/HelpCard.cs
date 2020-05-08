@@ -7,6 +7,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
     using System.Collections.Generic;
     using Microsoft.Bot.Schema;
     using Microsoft.Bot.Schema.Teams;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
     using Microsoft.Teams.Apps.BookAThing.Models;
     using Microsoft.Teams.Apps.BookAThing.Resources;
     using Newtonsoft.Json;
@@ -19,8 +20,9 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
         /// <summary>
         /// Get help card attachment.
         /// </summary>
+        /// <param name="appId"> Microsoft app id.</param>
         /// <returns>List of attachments.</returns>
-        public static List<Attachment> GetHelpAttachments()
+        public static List<Attachment> GetHelpAttachments(string appId)
         {
             List<Attachment> attachments = new List<Attachment>();
 
@@ -28,7 +30,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
             buttons.AddRange(new List<CardAction>
             {
                 new CardAction(ActionTypes.MessageBack, Strings.BookRoom, text: BotCommands.BookAMeeting, displayText: Strings.BookRoom),
-                new TaskModuleAction(Strings.ManageFavorites, new { data = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction { Text = BotCommands.ShowFavoriteTaskModule }) }),
+                new TaskModuleAction(Strings.ManageFavorites, new AdaptiveTaskModuleCardAction(appId) { Text = BotCommands.ShowFavoriteTaskModule }),
             });
 
             var heroCard = new HeroCard

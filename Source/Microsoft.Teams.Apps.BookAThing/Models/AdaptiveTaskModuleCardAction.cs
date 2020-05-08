@@ -12,6 +12,15 @@ namespace Microsoft.Teams.Apps.BookAThing.Models
     public class AdaptiveTaskModuleCardAction
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="AdaptiveTaskModuleCardAction"/> class.
+        /// </summary>
+        /// <param name="skillId"> Microsoft app id to embedded in card actions. </param>
+        public AdaptiveTaskModuleCardAction(string skillId)
+        {
+            this.SkillId = skillId;
+        }
+
+        /// <summary>
         /// Gets or sets action type for button.
         /// </summary>
         [JsonProperty("type")]
@@ -35,5 +44,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Models
         /// </summary>
         [JsonProperty("activityReferenceId")]
         public string ActivityReferenceId { get; set; }
+
+        /// <summary>
+        /// Gets or sets skillId.
+        /// </summary>
+        [JsonProperty("skillId")]
+        public string SkillId { get; set; }
     }
 }

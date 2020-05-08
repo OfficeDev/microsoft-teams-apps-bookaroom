@@ -8,6 +8,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
     using AdaptiveCards;
     using Microsoft.Bot.Schema;
     using Microsoft.Bot.Schema.Teams;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
     using Microsoft.Teams.Apps.BookAThing.Models;
     using Microsoft.Teams.Apps.BookAThing.Resources;
     using Newtonsoft.Json;
@@ -20,8 +21,9 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
         /// <summary>
         /// Get manage favorite card attachment.
         /// </summary>
+        /// <param name="appId"> Microsoft app id.</param>
         /// <returns>An attachment.</returns>
-        public static Attachment GetManageFavoriteAttachment()
+        public static Attachment GetManageFavoriteAttachment(string appId)
         {
             var card = new AdaptiveCard("1.0")
             {
@@ -36,7 +38,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                         Title = Strings.ManageFavorites,
                         Data = new AdaptiveSubmitActionData
                         {
-                            Msteams = new TaskModuleAction(Strings.ManageFavorites, new { data = JsonConvert.SerializeObject(new AdaptiveTaskModuleCardAction { Text = BotCommands.ShowFavoriteTaskModule }) }),
+                            Msteams = new TaskModuleAction(Strings.ManageFavorites, new AdaptiveTaskModuleCardAction(appId) { Text = BotCommands.ShowFavoriteTaskModule }),
                         },
                     },
                 },

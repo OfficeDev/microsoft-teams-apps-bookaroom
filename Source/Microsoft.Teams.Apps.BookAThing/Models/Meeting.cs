@@ -12,6 +12,15 @@ namespace Microsoft.Teams.Apps.BookAThing.Models
     public class Meeting
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="Meeting"/> class.
+        /// </summary>
+        /// <param name="skillId"> Microsoft app id to embed in card actions.</param>
+        public Meeting(string skillId)
+        {
+            this.SkillId = skillId;
+        }
+
+        /// <summary>
         /// Gets or sets email associated with room.
         /// </summary>
         public string RoomEmail { get; set; }
@@ -46,5 +55,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Models
         /// </summary>
         [JsonProperty("text")]
         public string Text { get; set; }
+
+        /// <summary>
+        /// Gets or sets skillId.
+        /// </summary>
+        [JsonProperty("skillId")]
+        public string SkillId { get; set; }
     }
 }

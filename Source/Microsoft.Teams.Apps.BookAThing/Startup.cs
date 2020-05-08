@@ -19,6 +19,7 @@ namespace Microsoft.Teams.Apps.BookAThing
     using Microsoft.Bot.Connector;
     using Microsoft.Bot.Connector.Authentication;
     using Microsoft.Extensions.Caching.Memory;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.IdentityModel.Tokens;
     using Microsoft.Teams.Apps.BookAThing.Bots;
@@ -29,6 +30,7 @@ namespace Microsoft.Teams.Apps.BookAThing
     using Microsoft.Teams.Apps.BookAThing.Dialogs;
     using Microsoft.Teams.Apps.BookAThing.Helpers;
     using Microsoft.Teams.Apps.BookAThing.Providers.Storage;
+    using Microsoft.Teams.Apps.BookAThing.Services;
     using Newtonsoft.Json.Serialization;
     using Polly;
     using Polly.Extensions.Http;
@@ -44,7 +46,11 @@ namespace Microsoft.Teams.Apps.BookAThing
         /// <param name="configuration">Configuration settings.</param>
         public Startup(Extensions.Configuration.IConfiguration configuration)
         {
-            this.Configuration = configuration;
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("cognitivemodels.json", optional: true);
+            builder.AddConfiguration(configuration);
+
+            this.Configuration = builder.Build();
         }
 
         /// <summary>
@@ -109,6 +115,15 @@ namespace Microsoft.Teams.Apps.BookAThing
 
             services.AddSingleton<MemoryCache>();
 
+            // Load settings
+            var settings = new BotSettings();
+            this.Configuration.Bind(settings);
+            services.AddSingleton(settings);
+            services.AddSingleton<BotSettings>(settings);
+
+            // Configure bot services
+            services.AddSingleton<BotServices>();
+
             // The Dialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
 
@@ -126,6 +141,7 @@ namespace Microsoft.Teams.Apps.BookAThing
                 this.Configuration["AppBaseUri"],
                 this.Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"],
                 this.Configuration["TenantId"],
+                this.Configuration["MicrosoftAppId"],
                 (IMeetingHelper)provider.GetService(typeof(IMeetingHelper))));
         }
 

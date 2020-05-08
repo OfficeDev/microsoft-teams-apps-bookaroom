@@ -25,6 +25,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
     using Microsoft.Teams.Apps.BookAThing.Common.Models.TableEntities;
     using Microsoft.Teams.Apps.BookAThing.Common.Providers;
     using Microsoft.Teams.Apps.BookAThing.Common.Providers.Storage;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
     using Microsoft.Teams.Apps.BookAThing.Helpers;
     using Microsoft.Teams.Apps.BookAThing.Models;
     using Microsoft.Teams.Apps.BookAThing.Providers.Storage;
@@ -68,6 +69,11 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         /// Valid tenant id for which bot will operate.
         /// </summary>
         private readonly string tenantId;
+
+        /// <summary>
+        /// Microsoft app id to embedded in card actions.
+        /// </summary>
+        private readonly string appId;
 
         /// <summary>
         /// Generating and validating JWT token.
@@ -119,8 +125,9 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         /// <param name="appBaseUri">Application base URL.</param>
         /// <param name="instrumentationKey">Instrumentation key for application insights logging.</param>
         /// <param name="tenantId">Valid tenant id for which bot will operate.</param>
+        /// <param name="appId">Microsoft app id to embedded in card actions.</param>
         /// <param name="meetingHelper">Helper class which exposes methods required for meeting creation.</param>
-        public BookAMeetingBot(ConversationState conversationState, UserState userState, T dialog, ITokenHelper tokenHelper, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, IMeetingProvider meetingProvider, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider, string appBaseUri, string instrumentationKey, string tenantId, IMeetingHelper meetingHelper)
+        public BookAMeetingBot(ConversationState conversationState, UserState userState, T dialog, ITokenHelper tokenHelper, IActivityStorageProvider activityStorageProvider, IFavoriteStorageProvider favoriteStorageProvider, IMeetingProvider meetingProvider, TelemetryClient telemetryClient, IUserConfigurationStorageProvider userConfigurationStorageProvider, string appBaseUri, string instrumentationKey, string tenantId, string appId, IMeetingHelper meetingHelper)
         {
             this.conversationState = conversationState;
             this.userState = userState;
@@ -134,6 +141,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
             this.appBaseUri = appBaseUri;
             this.instrumentationKey = instrumentationKey;
             this.tenantId = tenantId;
+            this.appId = appId;
             this.meetingHelper = meetingHelper;
         }
 
@@ -262,7 +270,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
                 return default;
             }
 
-            var postedValues = JsonConvert.DeserializeObject<MeetingViewModel>(JObject.Parse(taskModuleRequest.Data.ToString()).SelectToken("data").ToString());
+            var postedValues = JsonConvert.DeserializeObject<MeetingViewModel>(taskModuleRequest.Data.ToString());
             var command = postedValues.Text;
             var token = this.tokenHelper.GenerateAPIAuthToken(activity.From.AadObjectId, activity.ServiceUrl, activity.From.Id, jwtExpiryMinutes: 60);
             string activityReferenceId = string.Empty;
@@ -322,7 +330,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
 
             if (message.Equals(BotCommands.MeetingFromTaskModule, StringComparison.OrdinalIgnoreCase))
             {
-                var attachment = SuccessCard.GetSuccessAttachment(valuesFromTaskModule, userConfiguration.WindowsTimezone);
+                var attachment = SuccessCard.GetSuccessAttachment(valuesFromTaskModule, userConfiguration.WindowsTimezone, this.appId);
                 var activityFromStorage = await this.activityStorageProvider.GetAsync(activity.From.AadObjectId, replyToId).ConfigureAwait(false);
 
                 if (!string.IsNullOrEmpty(replyToId))
@@ -333,7 +341,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
                         Conversation = activity.Conversation,
                         Attachments = new List<Attachment> { attachment },
                     };
-                    await turnContext.UpdateActivityAsync(updateCardActivity).ConfigureAwait(false);
+                    await turnContext.SendActivityAsync(updateCardActivity).ConfigureAwait(false);
                 }
 
                 await turnContext.SendActivityAsync(MessageFactory.Text(string.Format(CultureInfo.CurrentCulture, Strings.RoomBooked, valuesFromTaskModule.RoomName)), cancellationToken).ConfigureAwait(false);
@@ -357,23 +365,31 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         /// <returns>A task that represents the work queued to execute.</returns>
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            var command = turnContext.Activity.Text;
-            await this.SendTypingIndicatorAsync(turnContext).ConfigureAwait(false);
-
-            if (turnContext.Activity.Text == null && turnContext.Activity.Value != null && turnContext.Activity.Type == ActivityTypes.Message)
+            // Check if activities are from groupchat/ teams scope. This might happen when the bot is consumed by VA.
+            if (turnContext.Activity.Conversation.IsGroup == true)
             {
-                command = JToken.Parse(turnContext.Activity.Value.ToString()).SelectToken("text").ToString();
+                await ShowNotSupportedInGroupChatCardAsync(turnContext).ConfigureAwait(false);
             }
-
-            switch (command.ToUpperInvariant())
+            else
             {
-                case BotCommands.Help:
-                    await ShowHelpCardAsync(turnContext).ConfigureAwait(false);
-                    break;
+                var command = turnContext.Activity.Text;
+                await this.SendTypingIndicatorAsync(turnContext).ConfigureAwait(false);
 
-                default:
-                    await this.dialog.RunAsync(turnContext, this.conversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken).ConfigureAwait(false);
-                    break;
+                if (turnContext.Activity.Text == null && turnContext.Activity.Value != null && turnContext.Activity.Type == ActivityTypes.Message)
+                {
+                    command = JToken.Parse(turnContext.Activity.Value.ToString()).SelectToken("text").ToString();
+                }
+
+                switch (command.ToUpperInvariant())
+                {
+                    case BotCommands.Help:
+                        await ShowHelpCardAsync(turnContext, this.appId).ConfigureAwait(false);
+                        break;
+
+                    default:
+                        await this.dialog.RunAsync(turnContext, this.conversationState.CreateProperty<DialogState>(nameof(DialogState)), cancellationToken).ConfigureAwait(false);
+                        break;
+                }
             }
         }
 
@@ -381,13 +397,26 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
         /// Send help card containing commands recognized by bot.
         /// </summary>
         /// <param name="turnContext">Context object containing information cached for a single turn of conversation with a user.</param>
+        /// <param name="appId"> Microsoft app id.</param>
         /// <returns>A task that represents the work queued to execute.</returns>
-        private static async Task ShowHelpCardAsync(ITurnContext<IMessageActivity> turnContext)
+        private static async Task ShowHelpCardAsync(ITurnContext<IMessageActivity> turnContext, string appId)
         {
             var activity = (Activity)turnContext.Activity;
             var reply = activity.CreateReply();
-            reply.Attachments = HelpCard.GetHelpAttachments();
+            reply.Attachments = HelpCard.GetHelpAttachments(appId);
             reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
+            await turnContext.SendActivityAsync(reply).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Send not supported message when bot is invoked from teams channel or group chat.
+        /// </summary>
+        /// <param name="turnContext">Context object containing information cached for a single turn of conversation with a user.</param>
+        /// <returns>A task that represents the work queued to execute.</returns>
+        private static async Task ShowNotSupportedInGroupChatCardAsync(ITurnContext<IMessageActivity> turnContext)
+        {
+            var activity = (Activity)turnContext.Activity;
+            var reply = activity.CreateReply(Strings.GroupChatNotSupportedMessage);
             await turnContext.SendActivityAsync(reply).ConfigureAwait(false);
         }
 
@@ -495,7 +524,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
             var activityFromStorage = await this.activityStorageProvider.GetAsync(turnContext.Activity.From.AadObjectId, activityReferenceId).ConfigureAwait(false);
             if (activityFromStorage != null)
             {
-                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(scheduleResponse, startUTCTime, endUTCTime, userConfiguration.WindowsTimezone, activityReferenceId);
+                var attachment = FavoriteRoomsListCard.GetFavoriteRoomsListAttachment(scheduleResponse, startUTCTime, endUTCTime, userConfiguration.WindowsTimezone, this.appId, activityReferenceId);
                 var updateCardActivity = new Activity(ActivityTypes.Message)
                 {
                     Id = activityFromStorage.ActivityId,
@@ -503,7 +532,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Bots
                     Attachments = new List<Attachment> { attachment },
                 };
 
-                var activityResponse = await turnContext.UpdateActivityAsync(updateCardActivity).ConfigureAwait(false);
+                var activityResponse = await turnContext.SendActivityAsync(updateCardActivity).ConfigureAwait(false);
                 Models.TableEntities.ActivityEntity newActivity = new Models.TableEntities.ActivityEntity { ActivityId = activityResponse.Id, PartitionKey = turnContext.Activity.From.AadObjectId, RowKey = activityReferenceId };
                 await this.activityStorageProvider.AddAsync(newActivity).ConfigureAwait(false);
             }

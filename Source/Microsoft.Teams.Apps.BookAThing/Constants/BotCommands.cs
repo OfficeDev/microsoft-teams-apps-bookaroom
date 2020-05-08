@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.Apps.BookAThing
+namespace Microsoft.Teams.Apps.BookAThing.Constants
 {
     /// <summary>
     /// Bot commands.

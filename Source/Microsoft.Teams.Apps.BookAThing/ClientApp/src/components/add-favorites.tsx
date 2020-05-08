@@ -11,6 +11,7 @@ import { components } from "react-select";
 import AsyncSelect from "react-select/async";
 import * as microsoftTeams from "@microsoft/teams-js";
 import * as Constants from "../constants";
+let appSettings = require('../../../appsettings.json');
 import { ApplicationInsights, SeverityLevel } from '@microsoft/applicationinsights-web';
 import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
 import { createBrowserHistory } from "history";
@@ -520,7 +521,7 @@ class AddFavorites extends React.Component<IAddFavoriteProps, IState>
         else if (favoriteSaveResult.status === 200) {
             this.appInsights.trackEvent({ name: `Favorites updated` }, { User: this.userObjectId });
             if (favoriteSaveResult !== null) {
-                let toBot = { Text: "fav closed", ReplyTo: this.replyTo };
+                let toBot = { Text: "fav closed", ReplyTo: this.replyTo, SkillId: appSettings["MicrosoftAppId"] };
                 microsoftTeams.tasks.submitTask(toBot);
             }
             else {

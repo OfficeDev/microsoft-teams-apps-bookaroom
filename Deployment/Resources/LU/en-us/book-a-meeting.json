@@ -1,0 +1,101 @@
+{
+  "luis_schema_version": "4.0.0",
+  "versionId": "0.1",
+  "name": "book-a-meeting",
+  "desc": "app for meeting room template intents",
+  "culture": "en-us",
+  "tokenizerVersion": "1.0.0",
+  "intents": [
+    {
+      "name": "BOOK ROOM"
+    },
+    {
+      "name": "MANAGE FAVORITES"
+    },
+    {
+      "name": "None"
+    }
+  ],
+  "entities": [],
+  "composites": [],
+  "closedLists": [],
+  "patternAnyEntities": [],
+  "regex_entities": [],
+  "prebuiltEntities": [],
+  "model_features": [],
+  "regex_features": [],
+  "patterns": [],
+  "utterances": [
+    {
+      "text": "book a room",
+      "intent": "BOOK ROOM",
+      "entities": []
+    },
+    {
+      "text": "book room",
+      "intent": "BOOK ROOM",
+      "entities": []
+    },
+    {
+      "text": "get me a room",
+      "intent": "BOOK ROOM",
+      "entities": []
+    },
+    {
+      "text": "get me a room please",
+      "intent": "BOOK ROOM",
+      "entities": []
+    },
+    {
+      "text": "i want to book a room",
+      "intent": "BOOK ROOM",
+      "entities": []
+    },
+    {
+      "text": "i want to book a room please",
+      "intent": "BOOK ROOM",
+      "entities": []
+    },
+    {
+      "text": "i want to manage my favorite rooms",
+      "intent": "MANAGE FAVORITES",
+      "entities": []
+    },
+    {
+      "text": "manage favorite",
+      "intent": "MANAGE FAVORITES",
+      "entities": []
+    },
+    {
+      "text": "manage favorites",
+      "intent": "MANAGE FAVORITES",
+      "entities": []
+    },
+    {
+      "text": "manage my favorite rooms",
+      "intent": "MANAGE FAVORITES",
+      "entities": []
+    },
+    {
+      "text": "manage my favorite rooms please",
+      "intent": "MANAGE FAVORITES",
+      "entities": []
+    },
+    {
+      "text": "please book a room",
+      "intent": "BOOK ROOM",
+      "entities": []
+    },
+    {
+      "text": "please manage my favorite rooms",
+      "intent": "MANAGE FAVORITES",
+      "entities": []
+    },
+    {
+      "text": "reserve a room",
+      "intent": "BOOK ROOM",
+      "entities": []
+    }
+  ],
+  "settings": []
+}

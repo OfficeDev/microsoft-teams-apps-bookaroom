@@ -1,0 +1,10 @@
+{
+  "defaultLocale": "en-us",
+  "languageModels": {
+    "en-us": {
+      "luisAppId": "",
+      "luisApiKey": "",
+      "luisApiHost": ""
+    }
+  }
+}

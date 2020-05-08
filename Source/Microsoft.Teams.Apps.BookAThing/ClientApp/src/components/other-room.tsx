@@ -11,6 +11,7 @@ import Select, { components } from "react-select";
 import AsyncSelect from "react-select/async";
 import * as microsoftTeams from "@microsoft/teams-js";
 import * as Constants from "../constants";
+let appSettings = require('../../../appsettings.json');
 import { ApplicationInsights, SeverityLevel } from '@microsoft/applicationinsights-web';
 import { ReactPlugin, withAITracking } from '@microsoft/applicationinsights-react-js';
 import { createBrowserHistory } from "history";
@@ -549,7 +550,7 @@ class OtherRoom extends React.Component<IOtherRoomProps, IState>
                     this.appInsights.trackEvent({ name: `Meeting created` }, { User: this.userObjectIdentifier, Room: selectedRoom.RowKey });
                     let response = await res.json();
                     if (response !== null) {
-                        let toBot = { MeetingId: response.id, WebLink: response.webLink, RoomName: selectedRoom.RoomName, RoomEmail: selectedRoom.RowKey, BuildingName: selectedRoom.BuildingName, StartDateTime: response.start.timeZone, EndDateTime: response.end.timeZone, Text: "meeting from task module", isFavourite: false, replyTo: this.replyTo, BuildingEmail: selectedRoom.PartitionKey };
+                        let toBot = { MeetingId: response.id, WebLink: response.webLink, RoomName: selectedRoom.RoomName, RoomEmail: selectedRoom.RowKey, BuildingName: selectedRoom.BuildingName, StartDateTime: response.start.timeZone, EndDateTime: response.end.timeZone, Text: "meeting from task module", isFavourite: false, replyTo: this.replyTo, BuildingEmail: selectedRoom.PartitionKey, SkillId: appSettings["MicrosoftAppId"] };
                         microsoftTeams.tasks.submitTask(toBot);
                     }
                     else {

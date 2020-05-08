@@ -1,0 +1,49 @@
+
+> LUIS application information
+> !# @app.name = book-a-meeting
+> !# @app.desc = app for meeting room template intents
+> !# @app.versionId = 0.1
+> !# @app.culture = en-us
+> !# @app.luis_schema_version = 4.0.0
+> !# @app.tokenizerVersion = 1.0.0
+
+
+> # Intent definitions
+
+## BOOK ROOM
+- book a room
+- book room
+- get me a room
+- get me a room please
+- i want to book a room
+- i want to book a room please
+- please book a room
+- reserve a room
+
+
+## MANAGE FAVORITES
+- i want to manage my favorite rooms
+- manage favorite
+- manage favorites
+- manage my favorite rooms
+- manage my favorite rooms please
+- please manage my favorite rooms
+
+
+## None
+
+
+> # Entity definitions
+
+
+> # PREBUILT Entity definitions
+
+
+> # Phrase list definitions
+
+
+> # List entities
+
+> # RegEx entities
+
+

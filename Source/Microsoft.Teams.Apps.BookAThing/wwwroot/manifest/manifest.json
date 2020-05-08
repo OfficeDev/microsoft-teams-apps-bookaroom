@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schemas.botframework.com/schemas/skills/skill-manifest-2.1.preview-0.json",
+  "$id": "microsoft_teams_apps_bookaroom",
+  "name": "microsoft-teams-apps-bookaroom",
+  "description": "microsoft-teams-apps-bookaroom description",
+  "publisherName": "Your Company",
+  "version": "1.1",
+  "iconUrl": "<icon url>",
+  "copyright": "Copyright (c) Microsoft Corporation. All rights reserved.",
+  "license": "",
+  "privacyUrl": "<privacy url>",
+  "endpoints": [
+    {
+      "name": "production",
+      "protocol": "BotFrameworkV3",
+      "description": "Production endpoint for the skill",
+      "endpointUrl": "",
+      "msAppId": ""
+    }
+  ],
+  "dispatchModels": {
+    "languages": {
+      "en-us": [
+        {
+          "id": "microsoft-teams-apps-bookaroom-en",
+          "name": "microsoft-teams-apps-bookaroom LU (English)",
+          "contentType": "application/lu",
+          "url": "file://book-a-meeting.lu",
+          "description": "English language model for the skill"
+        }
+      ]
+    }
+  },
+  "activities": {
+    "message": {
+      "type": "message",
+      "description": "Receives the users utterance and attempts to resolve it using the skill's LU models"
+    }
+  }
+}

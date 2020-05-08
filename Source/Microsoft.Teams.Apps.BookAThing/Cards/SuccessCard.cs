@@ -9,6 +9,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
     using System.Globalization;
     using AdaptiveCards;
     using Microsoft.Bot.Schema;
+    using Microsoft.Teams.Apps.BookAThing.Constants;
     using Microsoft.Teams.Apps.BookAThing.Models;
     using Microsoft.Teams.Apps.BookAThing.Resources;
     using Newtonsoft.Json;
@@ -23,8 +24,9 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
         /// </summary>
         /// <param name="meeting">Meeting model containig meeting details which needs to be display to user.</param>
         /// <param name="timeZone">User local time zone.</param>
+        /// <param name="appId"> Microsoft app id.</param>
         /// <returns>Adaptive card attachment indicating successful meeting creation.</returns>
-        public static Attachment GetSuccessAttachment(MeetingViewModel meeting, string timeZone)
+        public static Attachment GetSuccessAttachment(MeetingViewModel meeting, string timeZone, string appId)
         {
             string greenBar = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAABhCAIAAACRaPz+AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwgAADsIBFShKgAAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4yMfEgaZUAAAAcSURBVDhPY5h4KBAZjfJH+aP8Uf4ofyTyDwUCAAZTG+Jp0gBvAAAAAElFTkSuQmCC";
             var startUTCDateTime = DateTime.Parse(meeting.StartDateTime, null, DateTimeStyles.RoundtripKind);
@@ -40,7 +42,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                     {
                         Type = ActionTypes.MessageBack,
                         Text = BotCommands.CancelMeeting,
-                        Value = JsonConvert.SerializeObject(new MeetingViewModel
+                        Value = JsonConvert.SerializeObject(new MeetingViewModel(appId)
                         {
                             MeetingId = meeting.MeetingId,
                             StartDateTime = meeting.StartDateTime,
@@ -101,7 +103,7 @@ namespace Microsoft.Teams.Apps.BookAThing.Cards
                             {
                                 Type = ActionTypes.MessageBack,
                                 Text = BotCommands.AddFavorite,
-                                Value = JsonConvert.SerializeObject(new MeetingViewModel
+                                Value = JsonConvert.SerializeObject(new MeetingViewModel(appId)
                                 {
                                     RoomEmail = meeting.RoomEmail,
                                     BuildingName = meeting.BuildingName,
