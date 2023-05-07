@@ -49,6 +49,6 @@
     "@types/moment-timezone": "^0.5.12",
     "@types/react-router-dom": "^5.1.0",
     "@types/react-select": "^3.0.5",
-    "webpack-bundle-analyzer": "^3.6.0"
+    "webpack-bundle-analyzer": "^4.8.0"
   }
 }
